@@ -47,23 +47,27 @@ button.act.pri:hover{background:#fff}
 button.act.danger:hover{border-color:var(--err);color:var(--err)}
 button.act:disabled{opacity:.35;cursor:not-allowed}
 
-table{width:100%;border-collapse:collapse;font-size:13px}
+table{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed}
 th{text-align:left;font-weight:400;font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;color:var(--dim);
-  padding:8px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:2}
-td{padding:8px 16px;border-bottom:1px solid var(--line);vertical-align:top}
+  padding:7px 14px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:2;white-space:nowrap}
+td{padding:7px 14px;border-bottom:1px solid var(--line);vertical-align:middle;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 tbody tr{cursor:pointer}
 tbody tr:hover td{background:var(--panel2)}
 tbody tr.on td{background:var(--panel2);box-shadow:inset 2px 0 0 var(--ink)}
 td.mono,th.mono,.mono{font-family:var(--mono);font-size:11.5px}
 td.num{color:var(--dim);font-family:var(--mono);font-size:11.5px;width:1%;white-space:nowrap}
-td.thumb{width:1%;padding:6px 0 6px 16px}
-td.thumb img{width:34px;height:34px;object-fit:cover;border:1px solid var(--line2);display:block;background:#fff}
-td.thumb .no{width:34px;height:34px;border:1px dashed #3a3a3a;display:block}
-.tag{font-family:var(--mono);font-size:10.5px;border:1px solid var(--line2);padding:1px 5px;color:var(--ink2);margin-right:4px;display:inline-block}
+td.thumb{width:64px;padding:5px 0 5px 14px}
+td.thumb img{width:44px;height:44px;object-fit:cover;object-position:top;border:1px solid var(--line2);display:block;background:#fff}
+td.thumb .no{width:44px;height:44px;border:1px dashed #3a3a3a;display:block}
+.cast{display:flex;gap:3px;align-items:center;overflow:hidden}
+.tag{font-family:var(--mono);font-size:10.5px;border:1px solid var(--line2);padding:1px 5px;color:var(--ink2);flex:0 0 auto}
+.tag.more{border-style:dashed;color:var(--dim)}
 .muted{color:var(--dim)}
 .nowrap{white-space:nowrap}
-.trunc{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:52ch}
-.flag{font-family:var(--mono);font-size:10.5px;padding:1px 5px;border:1px solid}
+.w-id{width:56px} .w-dur{width:64px} .w-loc{width:64px} .w-cast{width:170px} .w-cam{width:215px} .w-flag{width:58px;text-align:right}
+.w-name{width:190px} .w-role{width:210px} .w-never{width:120px} .w-path{width:46%}
+.trunc{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.flag{font-family:var(--mono);font-size:10.5px;padding:1px 5px;border:1px solid;display:inline-block}
 .flag.error{color:var(--err);border-color:#432520} .flag.warn{color:var(--warn);border-color:#3b3320} .flag.block{color:var(--err);border-color:#432520}
 
 .empty{padding:22px 16px;color:var(--dim);font-size:13px;max-width:64ch}
@@ -71,6 +75,10 @@ td.thumb .no{width:34px;height:34px;border:1px dashed #3a3a3a;display:block}
 
 .pane{padding:14px 16px}
 .pane+.pane{border-top:1px solid var(--line)}
+
+.stat{display:flex;justify-content:space-between;gap:12px;padding:4px 0;border-bottom:1px solid var(--line);font-size:12.5px}
+.stat:last-child{border:0}
+.stat b{font-weight:400;font-family:var(--mono);font-size:11.5px;color:var(--dim)}
 .pane h2{font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin:0 0 10px;font-weight:400}
 .f{display:block;margin-bottom:11px}
 .f>span{display:block;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-bottom:4px}
@@ -99,8 +107,9 @@ pre .neg{color:var(--err)}
 .notes div::before{content:"— "}
 .hero{width:100%;border:1px solid var(--line2);background:#fff;display:block;margin-bottom:8px}
 
-.editor{display:flex;flex-direction:column;height:100%}
-.editor textarea{flex:1;width:100%;background:#0a0a0a;border:0;border-top:1px solid var(--line);padding:18px 22px;
+.scroll.host{display:flex;padding:0;overflow:hidden}
+.editor{display:flex;flex-direction:column;flex:1;min-width:0;width:100%}
+.editor textarea{flex:1;width:100%;background:#0a0a0a;border:0;padding:20px 26px;
   font-family:var(--mono);font-size:13px;line-height:1.75;resize:none}
 .editor textarea:focus{outline:0}
 

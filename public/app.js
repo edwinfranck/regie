@@ -93,8 +93,27 @@ const sideHelp = () => {
     ul.append(r);
   }
   p.append(ul);
-  return p;
+  const box = el('div'); box.append(p);
+  if (S.film?.shots?.length) box.append(spread());
+  return box;
 };
+
+// La colonne de droite ne reste jamais vide : a defaut d'alerte, elle dit
+// comment l'episode se repartit.
+function spread() {
+  const p = el('div', 'pane'); p.append(el('h2', null, 'Répartition'));
+  const byLoc = {}, byCh = {};
+  for (const s of S.film.shots) {
+    byLoc[s.location || '—'] = (byLoc[s.location || '—'] || 0) + 1;
+    (s.characters || []).forEach((c) => { byCh[c.id] = (byCh[c.id] || 0) + 1; });
+  }
+  const line = (k, v, unit) => { const d = el('div', 'stat'); d.append(el('span', null, k), el('b', null, `${v} ${unit}`)); return d; };
+  p.append(line('Durée cumulée', S.film.total, 's'));
+  p.append(line('Plans sans personnage', S.film.shots.filter((s) => !s.characters?.length).length, 'plans'));
+  Object.entries(byLoc).sort((a, b) => b[1] - a[1]).forEach(([k, v]) => p.append(line(k, v, 'plans')));
+  Object.entries(byCh).sort((a, b) => b[1] - a[1]).forEach(([k, v]) => p.append(line(k, v, 'plans')));
+  return p;
+}
 const table = (cols, rows) => {
   const t = el('table'), th = el('tr');
   cols.forEach((c) => th.append(el('th', c.cls, c.t)));
@@ -171,7 +190,7 @@ async function viewScript() {
   });
   side.append(p);
   const { scroll } = shell('Script', d.file, [save], wrap, side);
-  scroll.style.display = 'flex'; scroll.style.padding = '0';
+  scroll.className = 'scroll host';
 }
 
 /* ── entités de la bible ──────────────────────────────────────────── */
@@ -187,21 +206,31 @@ async function viewEntities(kind) {
   const meta = KIND[kind];
   const rows = items.map((it) => tr([
     { cls: 'thumb', node: it.exists ? thumb(it.ref) : el('span', 'no') },
-    { t: it.id, cls: 'mono' },
-    { t: it.name || '—' },
-    { t: it.sub || '', cls: 'muted' },
-    { t: it.never.length ? `${it.never.length} interdits` : '—', cls: 'mono muted' },
+    { t: it.id, cls: 'mono w-id' },
+    { t: it.name || '—', cls: 'w-name' },
+    { t: it.sub || '', cls: 'muted w-role' },
+    { t: it.never.length ? `${it.never.length} interdits` : '—', cls: 'mono muted w-never' },
+    { node: el('span', 'trunc muted', (it.short || it.block || '').split('\n')[0]) },
   ], { on: () => { S.sel = it.id; renderView(); }, sel: S.sel === it.id }));
 
   const add = el('button', 'act pri', `Nouveau ${meta.one}`);
   add.onclick = () => newEntity(kind, items);
 
-  const node = rows.length ? table([{ t: '' }, { t: 'ID' }, { t: 'Nom' }, { t: 'Rôle' }, { t: 'Interdits' }], rows)
+  const node = rows.length ? table([{ t: '', cls: 'w-id' }, { t: 'ID', cls: 'w-id' }, { t: 'Nom', cls: 'w-name' },
+    { t: 'Rôle', cls: 'w-role' }, { t: 'Interdits', cls: 'w-never' }, { t: 'Description' }], rows)
     : Object.assign(el('div', 'empty'), { innerHTML: `Aucun ${meta.one}. Le bouton <b>Nouveau ${meta.one}</b> en crée un ; tout ce que tu écris ici part dans chaque prompt qui l'utilise.` });
 
   const sel = items.find((i) => i.id === S.sel);
   shell(meta.label, `${items.length} · ${items.filter((i) => i.exists).length} avec référence`, [add], node,
     sel ? entityPane(kind, sel) : plateSide(d));
+}
+
+function castCell(list) {
+  const d = el('div', 'cast');
+  if (!list.length) { d.append(el('span', 'muted', '—')); return d; }
+  list.slice(0, 3).forEach((c) => d.append(el('span', 'tag', c.id)));
+  if (list.length > 3) d.append(el('span', 'tag more', `+${list.length - 3}`));
+  return d;
 }
 
 const thumb = (ref) => { const i = new Image(); i.src = refUrl(ref); i.loading = 'lazy'; return i; };
@@ -307,13 +336,13 @@ function viewShots() {
   const rows = S.film.shots.map((s) => {
     const bad = issuesFor(s.id);
     return tr([
-      { t: String(s.id), cls: 'num' },
-      { t: `${s.duration}s`, cls: 'num' },
-      { t: s.location || '—', cls: 'mono' },
-      { node: (() => { const d = el('div'); (s.characters || []).forEach((c) => d.append(el('span', 'tag', c.id))); if (!s.characters?.length) d.append(el('span', 'muted', '—')); return d; })() },
-      { t: s.cameraCode || '—', cls: 'mono muted nowrap' },
+      { t: String(s.id), cls: 'num w-id' },
+      { t: `${s.duration}s`, cls: 'num w-dur' },
+      { t: s.location || '—', cls: 'mono w-loc' },
+      { cls: 'w-cast', node: castCell(s.characters || []) },
+      { t: s.cameraCode || '—', cls: 'mono muted w-cam' },
       { node: el('span', 'trunc', s.action || '') },
-      { node: bad.length ? el('span', `flag ${bad[0].level}`, bad.length) : el('span', 'muted', '') },
+      { cls: 'w-flag', node: bad.length ? el('span', `flag ${bad[0].level}`, String(bad.length)) : el('span', 'muted', '') },
     ], { on: () => { S.sel = String(s.id); renderView(); }, sel: S.sel === String(s.id) });
   });
   const add = el('button', 'act pri', 'Nouveau plan');
@@ -322,7 +351,8 @@ function viewShots() {
     if (r.error) return toast(r.error);
     await reload(); S.sel = String(S.film.shots[S.film.shots.length - 1].id); renderView(); toast('plan créé');
   };
-  const node = rows.length ? table([{ t: '#' }, { t: 'Durée' }, { t: 'Lieu' }, { t: 'Casting' }, { t: 'Caméra' }, { t: 'Action' }, { t: '' }], rows)
+  const node = rows.length ? table([{ t: '#', cls: 'w-id' }, { t: 'Durée', cls: 'w-dur' }, { t: 'Lieu', cls: 'w-loc' },
+    { t: 'Casting', cls: 'w-cast' }, { t: 'Caméra', cls: 'w-cam' }, { t: 'Action' }, { t: '', cls: 'w-flag' }], rows)
     : Object.assign(el('div', 'empty'), { innerHTML: 'Aucun plan. <b>Nouveau plan</b> en ajoute un ; chaque plan pioche ses personnages, son lieu et ses objets dans la bible.' });
   shell('Plans', `${S.film.shots.length} · ${S.film.total}s`, [add], node, S.sel ? null : sideHelp());
   if (S.sel) shotPane(S.sel);
