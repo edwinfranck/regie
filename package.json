@@ -1,0 +1,10 @@
+{
+  "name": "regie",
+  "version": "0.1.0",
+  "description": "Compilateur de prompts pour series generees. Une bible, un decoupage, N moteurs.",
+  "type": "module",
+  "bin": { "regie": "./src/cli.mjs" },
+  "scripts": { "check": "node src/cli.mjs check" },
+  "dependencies": { "yaml": "^2.6.0" },
+  "license": "MIT"
+}

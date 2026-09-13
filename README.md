@@ -1,0 +1,74 @@
+# régie
+
+**Une bible, un découpage, N moteurs.**
+
+régie ne génère rien. Il compile. Tu décris ton univers une seule fois dans
+`bible.yaml`, tu découpes ton épisode dans `plans.yaml`, et l'outil en sort les
+prompts de chaque plan pour chaque moteur — image fixe, planche storyboard,
+Veo, Kling, Wan — avec les bonnes images de référence à charger et la bonne
+liste de négatifs.
+
+La règle qui justifie l'outil :
+
+> Un modèle n'a aucune mémoire entre deux générations. Tout ce qui n'est ni
+> écrit ni montré en image sera réinventé, différemment à chaque fois.
+
+Donc : une seule source de vérité, jamais deux. Une bible papier et des prompts
+écrits à la main, ce sont déjà deux sources — elles divergent en une semaine.
+
+## Installer
+
+```sh
+npm install
+npm link          # rend la commande `regie` disponible partout
+```
+
+## Utiliser
+
+```sh
+regie check --film ~/films/penitencier   # vérifie la bible et le découpage
+regie list                               # la feuille de plans
+regie shot 14                            # la fiche de plan et tous ses prompts
+regie shot 14 --target veo               # un seul moteur
+regie sheet SB5                          # une planche storyboard multi-cases
+regie build                              # écrit tout dans <film>/regie/out/
+```
+
+`--film` peut être remplacé par la variable `REGIE_FILM`, ou omis si tu es déjà
+dans le dossier du film.
+
+## Le dossier d'un film
+
+```
+mon-film/
+  01-refs/            les images gelées : feuilles perso, plaques de décor, planche d'objets
+  regie/
+    bible.yaml        l'univers : LOOK, règles, lumière, personnages, lieux, accessoires
+    plans.yaml        l'épisode : les plans, la caméra, les dialogues, les planches
+    out/              les prompts compilés
+```
+
+## Ce que `check` attrape
+
+Avant de brûler le moindre crédit :
+
+- un mouvement de caméra interdit par le bloc `MOTION` ;
+- un plan plus long que la durée max, là où le style dérive ;
+- plus de personnages dans un plan que la règle ne l'autorise ;
+- deux personnages que la bible déclare trop ressemblants pour partager un plan ;
+- une entité utilisée dont l'image de référence n'existe pas encore — bloquant :
+  aucun plan ne se génère avant ses références ;
+- un bloc gelé sans ref, un personnage sans ligne `NEVER`.
+
+## Ajouter un moteur
+
+Un fichier dans `src/targets/`, une ligne dans `src/targets/index.mjs`. Un
+moteur reçoit un plan déjà résolu — personnages, lieu, lumière, caméra,
+négatifs, références — et ne fait que le mettre en forme à sa grammaire.
+
+## État
+
+v0.1 — le compilateur. Pas d'interface, pas d'appel à une API de génération :
+tu copies le prompt dans l'outil de ton choix. La suite (interface locale,
+bibliothèque d'actifs, génération branchée) vient après un épisode complet
+produit avec celui-ci.
