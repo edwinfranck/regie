@@ -29,10 +29,25 @@ npm link          # rend la commande `regie` disponible partout
 regie serve --film ~/films/penitencier      # http://localhost:4173
 ```
 
-Rien à installer, rien à compiler : un serveur Node et du HTML. À gauche les
-plans et les planches, marqués de leurs problèmes. À droite la fiche de plan, la
-caméra modifiable, les images de référence en vignettes, et les prompts compilés
-en onglets avec un bouton de copie.
+Rien à installer, rien à compiler : un serveur Node et du HTML. Trois étapes,
+dans l'ordre où un épisode se fabrique :
+
+**1. Script** — le script d'origine, mis en page comme un scénario.
+
+**2. Assets** — les personnages, les planches de référence, les lieux et les
+accessoires en cartes. Une carte grise signale une référence qui n'existe pas
+encore. Chaque fiche donne la description gelée, la liste des interdits, et le
+prompt qui fabrique cette référence-là — feuille trois vues, plaque de décor,
+planche d'objets, planche d'alignement.
+
+**3. Storyboard** — les plans en cases, groupés par scène, avec leur cadrage et
+leurs personnages. Un clic ouvre la fiche de plan : caméra modifiable, images de
+référence à charger, et les prompts compilés pour chaque moteur.
+
+Le sélecteur de style en haut à droite bascule le projet entre les variantes
+définies dans `look.variants`. Il redemande confirmation, parce que la bible est
+claire là-dessus : changer de style n'est pas une correction, c'est une nouvelle
+version du projet.
 
 Chaque plan a son URL (`#plan-14`, `#planche-SB5`) : rafraîchir retombe au bon
 endroit. Modifier la caméra ou la durée réécrit `plans.yaml` sans reformater le

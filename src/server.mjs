@@ -3,7 +3,8 @@ import { readFileSync, existsSync, writeFileSync } from 'node:fs';
 import { join, resolve, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import YAML from 'yaml';
-import { loadFilm, resolveShot, allShots, findShot } from './film.mjs';
+import { loadFilm, resolveShot, allShots, findShot, activeLook } from './film.mjs';
+import { charSheetPrompt, locationPlatePrompt, propsSheetPrompt, lineupPrompt } from './assets.mjs';
 import { validate } from './validate.mjs';
 import { cameraFr, SIZES, ANGLES, MOVES } from './camera.mjs';
 import { TARGETS, videoTargets } from './targets/index.mjs';
@@ -28,6 +29,7 @@ export function serve(filmDir, port = 4173) {
       return { id: s.id, duration: s.duration, location: `${s.location.id} ${s.location.name}`,
         characters: s.characters.map((c) => ({ id: c.id, name: c.name })),
         camera: s.camera, cameraFr: cameraFr(s.camera), action: s.action, group: s.group,
+        title: shot.title || null, image: shot.image && existsSync(resolve(film.dir, shot.image)) ? shot.image : null,
         dialogue: s.dialogue, ok: true };
     } catch (e) { return { id: String(shot.id), error: e.message, ok: false }; }
   };
@@ -49,6 +51,66 @@ export function serve(filmDir, port = 4173) {
           shots: allShots(film).map((s) => summarise(film, s)),
           sheets: film.plans.sheets || [], issues,
           vocab: { SIZES, ANGLES, MOVES, allowed: film.bible.motion?.allowed_moves || Object.keys(MOVES) },
+          plates: Object.fromEntries(Object.entries(film.bible.locations).map(([id, l]) => [id, l.ref]).filter(([, r]) => r)),
+          look: { active: film.bible.look.active, variants: Object.entries(film.bible.look.variants || {}).map(([id, v]) => ({ id, name: v.name, frozen: !!v.frozen })) },
+          scenes: (film.plans.sheets || []).map((sh) => ({ ...sh })),
+        });
+      }
+
+
+      // Etape 1 — le script d'origine, tel qu'il a ete ecrit.
+      if (p === '/api/script') {
+        const film = load();
+        const f = ['Script.md', 'script.md'].map((n) => join(film.dir, n)).find(existsSync);
+        return json(res, { text: f ? readFileSync(f, 'utf8') : '', file: f ? f.replace(film.dir + '/', '') : null,
+          shots: allShots(film).map((sh) => ({ id: sh.id, dialogue: sh.dialogue || null, action: sh.action })) });
+      }
+
+      // Etape 2 — les actifs de la bible et le prompt qui fabrique chacun.
+      if (p === '/api/assets') {
+        const film = load(); const b = film.bible;
+        const has = (r) => !!r && existsSync(resolve(film.dir, r));
+        const chars = Object.entries(b.characters).map(([id, c]) => ({
+          id, kind: 'character', name: c.name, sub: c.role, ref: c.ref, exists: has(c.ref), frozen: !!c.frozen,
+          fields: [['Description', c.block], ['Costume', c.costume], ['Marqueur de silhouette', c.silhouette], ['Taille', c.height_m ? `${c.height_m} m` : '']],
+          never: c.never || [], prompt: charSheetPrompt(b, { ...c, id }),
+        }));
+        const locs = Object.entries(b.locations).map(([id, l]) => ({
+          id, kind: 'location', name: l.name, sub: 'lieu', ref: l.ref, exists: has(l.ref),
+          fields: [['Description', l.block], ['Ambiance sonore', l.sound]], never: l.never || [], prompt: locationPlatePrompt(b, l),
+        }));
+        const props = Object.entries(b.props).map(([id, x]) => ({
+          id, kind: 'prop', name: x.name, sub: 'accessoire', ref: null, exists: false,
+          fields: [['Description', x.block]], never: x.never || [], prompt: { text: propsSheetPrompt(b).text, negative: propsSheetPrompt(b).negative },
+        }));
+        const planches = [
+          { id: 'LINEUP', kind: 'plate', name: 'Planche d\u2019alignement', sub: 'les 7 \u00e0 la m\u00eame \u00e9chelle', ref: b.assets?.lineup, exists: has(b.assets?.lineup), fields: [], never: [], prompt: lineupPrompt(b) },
+          { id: 'ASSETS', kind: 'plate', name: 'Planche d\u2019objets', sub: 'les 6 objets \u00e0 la m\u00eame \u00e9chelle', ref: b.assets?.props_sheet, exists: has(b.assets?.props_sheet), fields: [], never: [], prompt: propsSheetPrompt(b) },
+        ];
+        return json(res, { look: activeLook(b), groups: [
+          { title: 'Personnages', items: chars },
+          { title: 'Planches de r\u00e9f\u00e9rence', items: planches },
+          { title: 'Lieux', items: locs },
+          { title: 'Accessoires', items: props },
+        ] });
+      }
+
+      // Changer de style : la seule ecriture autorisee dans la bible, et
+      // l'interface previent que c'est une nouvelle version du projet.
+      if (p === '/api/style' && req.method === 'POST') {
+        let body = '';
+        req.on('data', (c) => (body += c));
+        return req.on('end', () => {
+          try {
+            const { variant } = JSON.parse(body);
+            const film = load();
+            const file = join(film.base, 'bible.yaml');
+            const doc = YAML.parseDocument(readFileSync(file, 'utf8'));
+            if (!doc.getIn(['look', 'variants', variant])) return json(res, { error: `style ${variant} inconnu` }, 400);
+            doc.setIn(['look', 'active'], variant);
+            writeFileSync(file, doc.toString({ lineWidth: 0, flowCollectionPadding: false }));
+            json(res, { ok: true, active: variant });
+          } catch (e) { json(res, { error: e.message }, 400); }
         });
       }
 

@@ -25,6 +25,16 @@ const get = (map, id, kind) => {
 
 // Un plan du decoupage + la bible => tout ce qu'il faut pour ecrire un prompt.
 // C'est la seule fonction qui sait assembler. Les cibles ne font que mettre en forme.
+// Le LOOK actif : une variante de bible.look.variants, aplatie pour que
+// les cibles n'aient jamais a savoir qu'il y en a plusieurs.
+export function activeLook(bible) {
+  const l = bible.look;
+  if (!l.variants) return l;
+  const v = l.variants[l.active];
+  if (!v) throw new Error(`LOOK "${l.active}" absent de look.variants`);
+  return { ...l, ...v, id: `${l.id}-${l.active}`, variant: l.active };
+}
+
 export function resolveShot(film, shot) {
   const { bible, plans } = film;
   const lightId = shot.light || plans.episode.light || 'DAY';
@@ -46,7 +56,7 @@ export function resolveShot(film, shot) {
   // Deux listes : une image fixe n'a pas a interdire le travelling,
   // et une video doit interdire les deux.
   const never = dedupe([
-    ...(bible.look.never || []),
+    ...(activeLook(bible).never || []),
     ...characters.flatMap((c) => c.never || []),
     ...props.flatMap((p) => p.never || []),
     ...(location.never || []),
@@ -64,7 +74,7 @@ export function resolveShot(film, shot) {
     camera: shot.camera || {},
     group: !!shot.group,
     note: shot.note || null,
-    look: bible.look,
+    look: activeLook(bible),
     rules: bible.rules || {},
     motion: bible.motion,
     format: bible.film.format,

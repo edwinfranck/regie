@@ -10,23 +10,21 @@
   <header>
     <div class="brand">régie</div>
     <div id="film-title" class="film">…</div>
-    <div class="spacer"></div>
-    <div id="health" class="health"></div>
+    <nav class="steps">
+      <button data-step="script"><i>1.</i> Script</button>
+      <button data-step="assets"><i>2.</i> Assets</button>
+      <button data-step="board" class="on"><i>3.</i> Storyboard</button>
+    </nav>
+    <div class="right">
+      <label class="style">Style
+        <select id="style"></select>
+      </label>
+      <div id="health" class="health"></div>
+    </div>
   </header>
 
-  <main>
-    <nav id="sidebar">
-      <div class="nav-head">Plans</div>
-      <ul id="shot-list"></ul>
-      <div class="nav-head">Planches</div>
-      <ul id="sheet-list"></ul>
-    </nav>
-
-    <section id="panel">
-      <div class="empty">Choisis un plan à gauche.</div>
-    </section>
-  </main>
-
+  <main id="view"></main>
+  <aside id="drawer" hidden></aside>
   <div id="toast"></div>
 <script src="/app.js"></script>
 </body>

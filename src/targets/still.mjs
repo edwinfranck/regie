@@ -19,7 +19,7 @@ export default {
       text: s.join('\n\n'),
       negative: spec.never,
       refs: refsList(spec),
-      notes: ['Charger les references ci-dessous AVANT de lancer. Le texte seul ne fige ni le corps, ni le costume, ni les objets.'],
+      notes: ['Charger les references AVANT de lancer. Le texte seul ne fige ni le corps, ni le costume, ni les objets.'],
     };
   },
 };
