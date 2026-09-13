@@ -26,70 +26,34 @@ npm link          # rend la commande `regie` disponible partout
 ## L'outil dans le navigateur
 
 ```sh
-regie serve --film ~/films/penitencier      # http://localhost:4173
+regie serve            # http://localhost:4173
 ```
 
-Rien à installer, rien à compiler : un serveur Node et du HTML. Trois étapes,
-dans l'ordre où un épisode se fabrique :
+Aucun projet n'est câblé dans l'outil : au premier lancement la liste est vide.
+On crée un projet (un titre, un dossier, un format) ou on importe un dossier qui
+contient déjà `regie/bible.yaml`. Tout le reste s'écrit dans l'interface.
 
-**1. Script** — le script d'origine, mis en page comme un scénario.
+| | |
+|---|---|
+| **Script** | l'éditeur du script, enregistré dans `Script.md` |
+| **Personnages · Lieux · Objets** | la bible : description gelée, forme courte, costume, marqueur de silhouette, liste d'interdits, image de référence à importer |
+| **Plans** | le découpage : durée, lieu, casting, objets, caméra, action |
+| **Planches** | les regroupements multi-cases |
+| **Réglages** | format, épisode, styles, contraintes de production |
 
-**2. Assets** — les personnages, les planches de référence, les lieux et les
-accessoires en cartes. Une carte grise signale une référence qui n'existe pas
-encore. Chaque fiche donne la description gelée, la liste des interdits, et le
-prompt qui fabrique cette référence-là — feuille trois vues, plaque de décor,
-planche d'objets, planche d'alignement.
+Chaque fiche affiche le prompt compilé correspondant, prêt à copier : prompt de
+feuille de personnage, de plaque de décor, de planche d'objets, d'alignement, et
+pour un plan l'image fixe plus un prompt par moteur vidéo.
 
-**3. Storyboard** — les plans en cases, groupés par scène, avec leur cadrage et
-leurs personnages. Un clic ouvre la fiche de plan : caméra modifiable, images de
-référence à charger, et les prompts compilés pour chaque moteur.
-
-Le sélecteur de style en haut à droite bascule le projet entre les variantes
-définies dans `look.variants`. Il redemande confirmation, parce que la bible est
-claire là-dessus : changer de style n'est pas une correction, c'est une nouvelle
-version du projet.
-
-Chaque plan a son URL (`#plan-14`, `#planche-SB5`) : rafraîchir retombe au bon
-endroit. Modifier la caméra ou la durée réécrit `plans.yaml` sans reformater le
-reste du fichier ni perdre un commentaire. La bible, elle, ne se modifie pas
-depuis l'interface — un bloc gelé ne se change pas d'un clic.
-
-Les YAML sont relus à chaque requête : tu peux les éditer dans ton éditeur et
-rafraîchir la page. Seul un changement dans le code de `regie` demande un
-redémarrage du serveur.
+Le contrôle tourne en permanence dans la colonne de droite. Rien n'est généré par
+l'outil : il écrit des fichiers YAML lisibles, que tu peux éditer à la main sans
+que l'interface les reformate.
 
 ### Et Tauri ?
 
-L'interface est déjà du web pur, sans build. L'emballer en application de bureau
-Tauri ne demandera que d'ajouter la coquille Rust autour de `public/` — aucune
-réécriture. À faire quand le besoin sera réel : ouvrir un film sans passer par le
-terminal, et lire des images hors du dossier du projet.
-
-## En ligne de commande
-
-```sh
-regie check --film ~/films/penitencier   # vérifie la bible et le découpage
-regie list                               # la feuille de plans
-regie shot 14                            # la fiche de plan et tous ses prompts
-regie shot 14 --target veo               # un seul moteur
-regie sheet SB5                          # une planche storyboard multi-cases
-regie build                              # écrit tout dans <film>/regie/out/
-regie serve                              # l'interface
-```
-
-`--film` peut être remplacé par la variable `REGIE_FILM`, ou omis si tu es déjà
-dans le dossier du film.
-
-## Le dossier d'un film
-
-```
-mon-film/
-  01-refs/            les images gelées : feuilles perso, plaques de décor, planche d'objets
-  regie/
-    bible.yaml        l'univers : LOOK, règles, lumière, personnages, lieux, accessoires
-    plans.yaml        l'épisode : les plans, la caméra, les dialogues, les planches
-    out/              les prompts compilés
-```
+L'interface est du web sans build : l'emballer en application de bureau ne
+demandera que la coquille Rust autour de `public/`. À faire quand ouvrir un
+dossier sans passer par le terminal deviendra gênant.
 
 ## Ce que `check` attrape
 

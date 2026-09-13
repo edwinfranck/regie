@@ -35,7 +35,7 @@ ${B('regie')} — une bible, un decoupage, N moteurs.
   regie shot <id> [--target t]  la fiche de plan et ses prompts
   regie sheet <id>              une planche storyboard multi-cases
   regie build [--out dossier]   ecrit tous les prompts sur disque
-  regie serve [--port 4173]     ouvre l'outil dans le navigateur
+  regie serve [--port 4173]     ouvre l'outil dans le navigateur (multi-projets)
 
   --film <dossier>   dossier du film (defaut : dossier courant, ou $REGIE_FILM)
   --target <id>      ${Object.keys(TARGETS).join(', ')}
@@ -43,12 +43,12 @@ ${B('regie')} — une bible, un decoupage, N moteurs.
     process.exit(0);
   }
 
-  const film = loadFilm(dir);
-
   if (cmd === 'serve') {
     const { serve } = await import('./server.mjs');
-    serve(dir, Number(flag('port', 4173)));
+    serve(Number(flag('port', 4173)));
   }
+
+  const film = cmd === 'serve' ? null : loadFilm(dir);
 
   if (cmd === 'check') {
     const { issues, total } = validate(film);
