@@ -4,7 +4,7 @@
   "description": "Compilateur de prompts pour series generees. Une bible, un decoupage, N moteurs.",
   "type": "module",
   "bin": { "regie": "./src/cli.mjs" },
-  "scripts": { "check": "node src/cli.mjs check" },
+  "scripts": { "check": "node src/cli.mjs check", "serve": "node src/cli.mjs serve" },
   "dependencies": { "yaml": "^2.6.0" },
   "license": "MIT"
 }

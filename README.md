@@ -23,7 +23,34 @@ npm install
 npm link          # rend la commande `regie` disponible partout
 ```
 
-## Utiliser
+## L'outil dans le navigateur
+
+```sh
+regie serve --film ~/films/penitencier      # http://localhost:4173
+```
+
+Rien à installer, rien à compiler : un serveur Node et du HTML. À gauche les
+plans et les planches, marqués de leurs problèmes. À droite la fiche de plan, la
+caméra modifiable, les images de référence en vignettes, et les prompts compilés
+en onglets avec un bouton de copie.
+
+Chaque plan a son URL (`#plan-14`, `#planche-SB5`) : rafraîchir retombe au bon
+endroit. Modifier la caméra ou la durée réécrit `plans.yaml` sans reformater le
+reste du fichier ni perdre un commentaire. La bible, elle, ne se modifie pas
+depuis l'interface — un bloc gelé ne se change pas d'un clic.
+
+Les YAML sont relus à chaque requête : tu peux les éditer dans ton éditeur et
+rafraîchir la page. Seul un changement dans le code de `regie` demande un
+redémarrage du serveur.
+
+### Et Tauri ?
+
+L'interface est déjà du web pur, sans build. L'emballer en application de bureau
+Tauri ne demandera que d'ajouter la coquille Rust autour de `public/` — aucune
+réécriture. À faire quand le besoin sera réel : ouvrir un film sans passer par le
+terminal, et lire des images hors du dossier du projet.
+
+## En ligne de commande
 
 ```sh
 regie check --film ~/films/penitencier   # vérifie la bible et le découpage
@@ -32,6 +59,7 @@ regie shot 14                            # la fiche de plan et tous ses prompts
 regie shot 14 --target veo               # un seul moteur
 regie sheet SB5                          # une planche storyboard multi-cases
 regie build                              # écrit tout dans <film>/regie/out/
+regie serve                              # l'interface
 ```
 
 `--film` peut être remplacé par la variable `REGIE_FILM`, ou omis si tu es déjà

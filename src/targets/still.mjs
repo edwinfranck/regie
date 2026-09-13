@@ -9,7 +9,7 @@ export default {
     s.push(block(spec.look.short));
     s.push(`FORMAT: ${spec.format.ratio} vertical, ${spec.format.resolution}.`);
     s.push(`SHOT ${shotTag(spec)} — ${camera.prose(spec.camera)}.`);
-    s.push(`SCENE — ${spec.location.id} ${spec.location.name}\n${block(spec.location.block)}`);
+    s.push(`SCENE\n${block(spec.location.block)}`);
     s.push(`LIGHT\n${block(spec.light.block)}`);
     for (const c of spec.characters) s.push(`${c.id} — ${c.name.toUpperCase()}\n${block(c.block)}\nCOSTUME: ${trim(c.costume)}`);
     for (const p of spec.props) s.push(block(p.block));

@@ -35,6 +35,7 @@ ${B('regie')} — une bible, un decoupage, N moteurs.
   regie shot <id> [--target t]  la fiche de plan et ses prompts
   regie sheet <id>              une planche storyboard multi-cases
   regie build [--out dossier]   ecrit tous les prompts sur disque
+  regie serve [--port 4173]     ouvre l'outil dans le navigateur
 
   --film <dossier>   dossier du film (defaut : dossier courant, ou $REGIE_FILM)
   --target <id>      ${Object.keys(TARGETS).join(', ')}
@@ -43,6 +44,11 @@ ${B('regie')} — une bible, un decoupage, N moteurs.
   }
 
   const film = loadFilm(dir);
+
+  if (cmd === 'serve') {
+    const { serve } = await import('./server.mjs');
+    serve(dir, Number(flag('port', 4173)));
+  }
 
   if (cmd === 'check') {
     const { issues, total } = validate(film);
@@ -115,7 +121,7 @@ ${B('regie')} — une bible, un decoupage, N moteurs.
     process.exit(0);
   }
 
-  throw new Error(`Commande inconnue : "${cmd}". Voir regie help.`);
+  if (cmd !== 'serve') throw new Error(`Commande inconnue : "${cmd}". Voir regie help.`);
 } catch (e) {
   console.error(`❌ ${e.message}`);
   process.exit(1);
