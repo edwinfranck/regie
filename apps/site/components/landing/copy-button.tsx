@@ -15,7 +15,7 @@ export function CopyButton({ text, className = '' }: { text: string; className?:
         });
       }}
       aria-label={done ? 'Copié' : 'Copier la commande'}
-      className={`inline-flex size-7 shrink-0 items-center justify-center rounded-[3px] text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground ${className}`}
+      className={`inline-flex size-11 shrink-0 items-center justify-center rounded-[3px] text-muted-foreground transition-colors hover:bg-secondary hover:text-signal-bright ${className}`}
     >
       {done ? <Check className="size-3.5" /> : <Copy className="size-3.5" />}
     </button>
