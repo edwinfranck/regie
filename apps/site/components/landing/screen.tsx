@@ -30,7 +30,7 @@ export function Screen({
   priority?: boolean;
   className?: string;
 }) {
-  const file = `/screens/${name}.webp`;
+  const file = `/screens/${name}.webp?v=2`;
   const present = existsSync(join(process.cwd(), 'public', 'screens', `${name}.webp`));
 
   return (
