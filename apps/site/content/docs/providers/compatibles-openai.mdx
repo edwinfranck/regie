@@ -1,0 +1,85 @@
+---
+title: "Services compatibles OpenAI"
+description: "Brancher un fournisseur peu connu sans écrire de code — openai-compatible et API personnalisée."
+---
+
+Le catalogue n'a pas d'adapter par fournisseur, et n'en a pas besoin : dans
+**Réglages → Providers IA**, la carte **Autre fournisseur** mène aux deux
+adapters génériques.
+
+## Format OpenAI : `openai-compatible`
+
+C'est le cas de la plupart des services à clé API. Leur documentation parle
+d'« OpenAI-compatible API » et donne une URL de base qui finit souvent par
+`/v1`.
+
+À l'ajout, choisissez le service dans la liste (nom et URL se pré-remplissent,
+le lien de sa doc s'affiche) ou « Autre service (URL personnalisée) », collez
+la clé, puis **Découvrir les modèles** : régie lit `GET /models` et classe
+chaque modèle en texte, image ou embedding, d'après les métadonnées quand le
+service en donne (`type` chez Together, `architecture.output_modalities` chez
+OpenRouter), sinon d'après l'identifiant (`flux`, `sdxl`, `stable-diffusion`,
+`dall-e`, `imagen`, `recraft`, `ideogram`… → image ; `embed`, `bge`, `e5`… →
+embedding).
+
+| Service | URL de base | Capacités |
+|---|---|---|
+| DeepInfra | `https://api.deepinfra.com/v1/openai` | texte, image, embedding |
+| Together AI | `https://api.together.xyz/v1` | texte, image, embedding |
+| OpenRouter | `https://openrouter.ai/api/v1` | texte |
+| Groq | `https://api.groq.com/openai/v1` | texte |
+| Fireworks AI | `https://api.fireworks.ai/inference/v1` | texte, embedding |
+| Mistral AI | `https://api.mistral.ai/v1` | texte, embedding |
+| DeepSeek | `https://api.deepseek.com/v1` | texte |
+| xAI (Grok) | `https://api.x.ai/v1` | texte |
+| Novita AI | `https://api.novita.ai/v3/openai` | texte (URL à vérifier) |
+| Hyperbolic | `https://api.hyperbolic.xyz/v1` | texte |
+| SiliconFlow | `https://api.siliconflow.com/v1` (Chine : `.cn`) | texte, embedding |
+| Cerebras | `https://api.cerebras.ai/v1` | texte |
+| Nebius AI Studio | `https://api.studio.nebius.com/v1` | texte, image (URL à vérifier) |
+| Perplexity | `https://api.perplexity.ai` | texte (modèles à ajouter à la main) |
+| Moonshot AI | `https://api.moonshot.ai/v1` | texte |
+| Alibaba Cloud (Qwen) | `https://dashscope-intl.aliyuncs.com/compatible-mode/v1` | texte, embedding |
+| LM Studio (local) | `http://localhost:1234/v1` | texte |
+| vLLM (local) | `http://localhost:8000/v1` | texte |
+| llama.cpp server (local) | `http://localhost:8080/v1` | texte |
+
+La clé est facultative (les serveurs locaux n'en demandent pas). La liste vit
+dans `packages/providers/src/adapters/openai.ts` (`meta.endpoints`) : ajouter
+un service, c'est une ligne.
+
+Les images passent par `POST /images/generations`. Un service dont l'API
+d'images a sa propre forme (Fireworks, Hyperbolic, SiliconFlow) se branche en
+texte ici et en images par l'API personnalisée. Replicate et fal, qui
+hébergent des milliers de modèles, ont leurs propres adapters.
+
+## API personnalisée : `custom-http`
+
+Pour un service qui a son propre format, en **une seule requête synchrone**.
+L'URL de base est alors l'endpoint complet. La clé, facultative, part en
+`Authorization: Bearer …` ; d'autres en-têtes se déclarent dans **En-têtes**.
+On décrit le corps avec des variables, et l'endroit où lire le résultat :
+
+```json
+{
+  "model": "flux-dev",
+  "prompt": "{{prompt}}",
+  "negative_prompt": "{{negative}}",
+  "width": "{{width}}",
+  "height": "{{height}}",
+  "seed": "{{seed}}"
+}
+```
+
+**Chemin du résultat** : `images.0.url` pour une réponse
+`{ "images": [{ "url": "https://…" }] }`. La valeur trouvée peut être une URL,
+une data URI ou du base64 brut (préciser alors le type, `image/png`).
+
+Variables : `{{prompt}}`, `{{negative}}`, `{{seed}}`, `{{width}}`,
+`{{height}}`, `{{aspect_ratio}}`, `{{duration}}`, `{{image}}` (data URI de la
+première image d'entrée). En texte, le chemin désigne la chaîne à lire
+(`choices.0.text`, `output`…). Déclarez ensuite les modèles à la main.
+
+Un service asynchrone (soumission puis sondage), des fichiers en multipart, une
+authentification signée : il faut alors
+[écrire un adapter](/docs/providers/ajouter-un-adapter).

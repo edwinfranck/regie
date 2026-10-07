@@ -1,0 +1,129 @@
+@import 'tailwindcss';
+@import 'fumadocs-ui/css/neutral.css';
+@import 'fumadocs-ui/css/preset.css';
+
+/*
+  Identité de régie, reprise de apps/web : fond blanc, texte presque noir,
+  une seule couleur d'accent (signal), angles quasi droits, peu d'ombres.
+  Toutes les couleurs passent par ces variables.
+*/
+
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.16 0 0);
+  --muted: oklch(0.965 0 0);
+  --muted-foreground: oklch(0.44 0 0);
+  --secondary: oklch(0.955 0 0);
+  --border: oklch(0.88 0 0);
+  --border-strong: oklch(0.78 0 0);
+  --stage: oklch(0.94 0 0);
+  --signal: oklch(0.6 0.19 40);
+  --signal-foreground: oklch(0.99 0 0);
+  --code-bg: oklch(0.975 0 0);
+  --shadow-frame: 0 1px 2px oklch(0 0 0 / 0.04), 0 12px 32px -12px oklch(0 0 0 / 0.14);
+}
+
+.dark {
+  --background: oklch(0.15 0 0);
+  --foreground: oklch(0.96 0 0);
+  --muted: oklch(0.22 0 0);
+  --muted-foreground: oklch(0.72 0 0);
+  --secondary: oklch(0.24 0 0);
+  --border: oklch(0.3 0 0);
+  --border-strong: oklch(0.4 0 0);
+  --stage: oklch(0.2 0 0);
+  --signal: oklch(0.7 0.17 45);
+  --signal-foreground: oklch(0.15 0 0);
+  --code-bg: oklch(0.19 0 0);
+  --shadow-frame: 0 1px 2px oklch(0 0 0 / 0.3), 0 12px 32px -12px oklch(0 0 0 / 0.6);
+}
+
+@theme inline {
+  --font-sans: var(--font-lexend), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-secondary: var(--secondary);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-stage: var(--stage);
+  --color-signal: var(--signal);
+  --color-signal-foreground: var(--signal-foreground);
+  --color-code: var(--code-bg);
+
+  /* Angles quasi droits, partout, Fumadocs compris. */
+  --radius-sm: 2px;
+  --radius-md: 3px;
+  --radius-lg: 4px;
+  --radius-xl: 5px;
+  --radius-2xl: 6px;
+  --radius-3xl: 8px;
+}
+
+/* Thème Fumadocs : neutre, contrasté, aligné sur l'application. */
+:root {
+  --color-fd-background: var(--background);
+  --color-fd-foreground: var(--foreground);
+  --color-fd-muted: var(--muted);
+  --color-fd-muted-foreground: var(--muted-foreground);
+  --color-fd-popover: var(--background);
+  --color-fd-popover-foreground: var(--foreground);
+  --color-fd-card: oklch(0.985 0 0);
+  --color-fd-card-foreground: var(--foreground);
+  --color-fd-border: var(--border);
+  --color-fd-primary: var(--foreground);
+  --color-fd-primary-foreground: var(--background);
+  --color-fd-secondary: var(--secondary);
+  --color-fd-secondary-foreground: var(--foreground);
+  --color-fd-accent: oklch(0.945 0 0);
+  --color-fd-accent-foreground: var(--foreground);
+  --color-fd-ring: var(--signal);
+}
+
+.dark {
+  --color-fd-card: oklch(0.18 0 0);
+  --color-fd-accent: oklch(0.26 0 0);
+}
+
+.dark #nd-sidebar {
+  --color-fd-muted: oklch(0.2 0 0);
+  --color-fd-secondary: oklch(0.22 0 0);
+}
+
+html {
+  scrollbar-gutter: stable;
+}
+
+html > body[data-scroll-locked] {
+  margin-right: 0px !important;
+  --removed-body-scroll-bar-size: 0px !important;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: color-mix(in oklch, var(--signal) 25%, transparent);
+}
+
+/* Documentation : l'élément actif de la navigation et les liens portent le signal. */
+#nd-sidebar a[data-active='true'] {
+  color: var(--signal);
+  font-weight: 500;
+}
+
+.prose a:not([data-card]) {
+  text-decoration-color: color-mix(in oklch, var(--signal) 60%, transparent);
+}
+
+.prose :where(code):not(:where(pre *)) {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+}

@@ -1,0 +1,33 @@
+---
+title: "Continuité"
+description: "Le contrôle déterministe avant de dépenser, l'analyse IA à la demande, le graphe du projet."
+---
+
+## Le contrôle déterministe
+
+La page **Continuité** relit la bible et le découpage à chaque visite —
+gratuitement, sans IA. Les mêmes contrôles s'affichent dans l'éditeur de plan.
+
+| Niveau | Exemples |
+|---|---|
+| **Bloquant** | un personnage ou un lieu du plan sans référence |
+| **Erreur** | mouvement interdit, plan trop long, trop de personnages, duo déclaré trop ressemblant hors plan de groupe, vocabulaire caméra inconnu, numéros de scène en double, personnage gelé sans référence |
+| **Avertissement** | lumière qui contredit l'heure de la scène, lieu du plan différent de celui de la scène, plan de groupe sans stratégie de repli, pas de style, durée totale loin de la cible |
+| **Info** | personnage absent de la distribution de la scène, scène sans plan, personnage jamais utilisé |
+
+Un plan **bloqué** ne part pas en génération : sans référence, le modèle
+inventerait le personnage, et vous paieriez pour un plan inutilisable.
+
+## L'analyse IA
+
+Ce qui demande de lire le texte — une blessure qui disparaît, un costume décrit
+autrement, un objet qui change de main — relève de l'analyse IA de continuité
+(tâche `continuity`), lancée à la demande. Ses remarques sont des suggestions,
+pas des blocages.
+
+## Le graphe du projet
+
+**Graphe du projet** dessine qui dépend de qui : projet, bible, scènes, plans,
+assets, générations. Cliquez un élément pour voir tout ce qu'il touche, en
+amont et en aval — par exemple, tous les plans à refaire quand la fiche d'un
+personnage change.

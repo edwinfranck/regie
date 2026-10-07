@@ -1,0 +1,112 @@
+---
+title: "Feuille de route"
+description: "Ce qui existe, ce qui est partiel, ce qui vient ensuite."
+icon: Milestone
+---
+
+La spécification « AI Film Studio » décrit un OS de production audiovisuelle
+complet. Cette page dit, section par section, ce qui existe, ce qui est
+partiel, et ce qui vient ensuite. Rien n'a été retiré de la cible pour
+simplifier : l'architecture (schéma, adapters, file, événements) porte déjà
+les modules des phases suivantes.
+
+Légende : **fait** — utilisable de bout en bout ; **partiel** — l'essentiel
+marche, des morceaux manquent (précisés) ; **phase 2/3** — prévu, pas encore
+d'interface.
+
+## Phase 1 — MVP (cette version)
+
+| § | Module | État | Notes |
+|---|---|---|---|
+| 1 | Modularité, provider agnostic | fait | paquets core / providers / studio ; 12 adapters derrière une interface commune |
+| 2 | Stack | fait | Next.js 16, TS, Tailwind 4, shadcn/Radix, TanStack Query, Zustand, dnd-kit, TipTap, Recharts ; Postgres + Prisma 7, Redis + BullMQ, SSE, S3 |
+| 3 | Design system | fait | tokens clair/sombre, clair sobre par défaut (préférence du propriétaire, à l'inverse de la spec qui demandait sombre) |
+| 4 | Dashboard | fait | récents, favoris, en production, générations en cours, activité, stockage, coût du mois, templates |
+| 5 | Projet | fait | toutes les rubriques ; Timeline et Graphe en phase 2 |
+| 6 | Concept | fait | assistant IA idée → concept, champ par champ applicable |
+| 7 | Story development | fait | 7 structures, temps forts éditables, réordonnables, reliés aux scènes, proposition IA |
+| 8 | Story map | fait | scènes réordonnables par glisser-déposer ; actes et séquences : modèle prêt, regroupement visuel partiel |
+| 9 | Character bible | fait | fiche complète, description gelée, costume, silhouette, interdits ; feuille, portrait, expressions, poses, angles, costume |
+| 10 | Location bible | fait | fiche, plaque, intérieur/extérieur/nuit/pluie |
+| 11 | World building | fait | 12 sections, injectées dans le contexte IA |
+| 12 | Screenwriting | partiel | éditeur format cinéma, autosave, versions, recherche, statistiques, IA sur sélection, cohérence, export PDF / Fountain / TXT / DOCX / Final Draft (.fdx) ; **reste** : commentaires ancrés dans le texte, collaboration temps réel |
+| 13 | Scene breakdown | fait | dépouillement IA d'une scène ; synchronisation scénario → scènes |
+| 14 | Scene director | fait | intentions + proposition de mise en scène et de plans |
+| 15 | Storyboard | fait | cases par plan, formats 16:9 / 9:16 / 4:3 / 2.39:1 / 1:1, planche multi-cases, export PDF |
+| 16 | Shot generator | fait | découpage IA, chaque plan acceptable/modifiable/supprimable |
+| 17 | Prompt engine | fait | Context Builder + compilateur déterministe, prompt final visible et réécrivable |
+| 18 | Image hub | fait | modèle, format, qualité, steps, CFG, seed, nombre, références ; progression, coût, provider, temps |
+| 19 | Références | fait | bibliothèque d'assets de référence, nature et tags, plusieurs par génération |
+| 20 | Consistency engine | fait | références par entité chargées automatiquement, AssetLink sur chaque sortie |
+| 21 | Video hub | fait | texte, image, première + dernière image, références → vidéo |
+| 22 | Video prompt engine | fait | variantes concise (kling), cinématique (veo), technique (wan), spécifique (runway) |
+| 23 | Camera library | fait | 13 cadres, 7 angles, 13 mouvements, focales, transitions |
+| 24 | Audio | partiel | voix (OpenAI TTS, ElevenLabs), effets sonores, musique via Fal/Replicate ; **phase 2** : mixage |
+| 26 | Asset manager | fait | filtres projet/scène/plan/personnage/lieu/type/date/provider/modèle, upload vérifié, détail, liens |
+| 27 | Production board | fait | kanban des scènes par stade |
+| 28 | AI assistant | fait | connaît bible, scènes, plans, contrôle ; streaming ; actions applicables d'un clic |
+| 29 | Continuity checker | fait | contrôle déterministe (erreur/avertissement/info, bloquants) + analyse IA |
+| 25 | Montage | fait | espace plein écran séparé : séquences, pistes vidéo/audio/sous-titres, chutier, moniteur, inspecteur, coupe, rognage, fondus, annuler/rétablir, assemblage depuis le découpage, rendu FFmpeg MP4/MOV, export SRT et EDL |
+| 30 | Project graph | fait | React Flow : projet, bible, scènes, plans, assets, générations ; dépendances amont/aval au clic |
+| 31 | Version control | fait | révisions de toute entité versionnée, auteur, date, champs modifiés, comparaison, restauration |
+| 32 | Provider management | fait | ajout, clé chiffrée, URL, modèles, prix, capacités, test de connexion ; 19 services compatibles OpenAI pré-renseignés (DeepInfra, Together, OpenRouter, Groq…) et API personnalisée pour les autres |
+| 33 | Model router | fait | AUTO (routes déclarées, puis qualité/coût/vitesse), modèle forçable |
+| 34 | Job queue | fait | BullMQ, QUEUED/PROCESSING/COMPLETED/FAILED/CANCELED, retry intelligent, annulation |
+| 35 | Cost tracking | fait | par jour, mois, projet, scène, provider, modèle |
+| 36 | Self-hosted | fait | Ollama, ComfyUI, OpenAI-compatible, API personnalisée ; local ou cloud au choix |
+| 37 | ComfyUI | fait | workflows API à variables, chacun devient un modèle |
+| 38 | Prompt templates | fait | 10 catégories, variables, templates utilisateur |
+| 39 | Export | fait | PDF, DOCX, TXT, Fountain, FDX, JSON, CSV, storyboard PDF, ZIP ; film MP4/MOV depuis le montage |
+| 40 | Collaboration | partiel | espaces, membres, 7 rôles, permissions, commentaires avec mentions et notifications ; **phase 2** : invitations par email, édition simultanée |
+| 41 | Base de données | fait | toutes les entités listées ; `Revision` générique à la place des tables *Version |
+| 42 | Sécurité | fait | Zod, RBAC, rate limiting, clés chiffrées, sessions, CSRF, validation des uploads, URLs signées, audit |
+| 43-44 | UX, onboarding | fait | « Que voulez-vous créer ? » → « Décrivez votre idée » → concept IA ; retour à toute étape |
+| 45-46 | Context engine, multi-modèle | fait | voir [prompts.md](/docs/prompts) et [providers.md](/docs/providers) |
+| 47-49 | UI, palette ⌘K, recherche | fait | barre latérale repliable, assistant, statut d'enregistrement et de génération ; recherche globale |
+| 50 | Responsive | partiel | desktop-first 1280–1920 ; tablette utilisable ; mobile en consultation |
+| 51 | Dark mode | fait | variables shadcn, bascule dans la barre du haut |
+| 52 | Performance | partiel | lazy loading, pagination par curseur, jobs en arrière-plan, streaming ; grilles non virtualisées |
+| 53 | Temps réel | fait | SSE : progression, position en file, fin, erreurs |
+| 54 | Erreurs | fait | provider, modèle, message traduit, réessayer, changer de modèle |
+| 55 | Admin | fait | utilisateurs, projets, stockage, jobs, coûts, erreurs, audit ; providers et prix via la page providers |
+| 57 | Local / Docker | fait | `docker compose`, `.env.example` |
+| 58 | Tests | partiel | unitaires (core, providers), intégration (pipeline complet), E2E Playwright ; pas encore de tests de composants |
+| 59 | Documentation | fait | README + docs/ |
+| 61 | Pas de fausse fonctionnalité | fait | refus 424 « provider non configuré » avec action ; modules non construits annoncés comme tels |
+
+## Phase 2
+
+1. **Montage (§25)** — un espace à part, plein écran, avec ses propres menus,
+   dans l'esprit de CapCut, Premiere Pro, Final Cut ou After Effects : on y
+   entre depuis le projet et on quitte la navigation habituelle. Séquences
+   multiples, pistes (vidéo ×3, audio, dialogue, musique, SFX, sous-titres),
+   bibliothèque des assets du projet à glisser dans la timeline, couper,
+   rogner, scinder, déplacer, transitions, fondus, volume, prévisualisation ;
+   assemblage automatique depuis le découpage (un clip par plan) ; rendu
+   MP4/MOV par un worker FFmpeg (nouvelle file `renders`). Modèles `Timeline*`
+   déjà en base.
+3. **Collaboration temps réel** — édition simultanée du scénario (Yjs +
+   TipTap Collaboration), présence, commentaires ancrés dans le texte,
+   invitations par email (magic link Auth.js).
+4. **Audio** — mixage simple, voix par personnage (voiceId sur la fiche),
+   dialogues générés depuis le scénario.
+6. **Performance** — grilles d'assets virtualisées, vignettes redimensionnées
+   à l'upload, CDN devant le stockage.
+
+## Cible finale — l'agent de production
+
+L'assistant actuel propose ; la cible est un agent conversationnel qui
+**agit** : il maîtrise toute la plateforme, guide de l'idée au film, et
+exécute lui-même les étapes — créer le concept depuis la conversation, écrire
+les fiches, découper une scène, lancer les générations, ouvrir la bonne page.
+Base technique : les tâches de `studio/ai.ts` et les routes existantes
+deviennent des outils (tool use), avec confirmation avant toute action qui
+coûte des crédits ou supprime.
+
+## Phase 3
+
+- Gestion de production avancée : plan de travail, planning, budget par
+  scène à partir des coûts réels.
+- Montage avancé, étalonnage des sorties, upscale et interpolation en lot.
+- API publique (jetons `ApiKey` déjà modélisés) et webhooks.
+- Quotas par utilisateur et par espace (le registre `Usage` fournit la mesure).

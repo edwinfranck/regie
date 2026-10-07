@@ -1,10 +1,38 @@
 {
   "name": "regie",
-  "version": "0.1.0",
-  "description": "Compilateur de prompts pour series generees. Une bible, un decoupage, N moteurs.",
-  "type": "module",
-  "bin": { "regie": "./src/cli.mjs" },
-  "scripts": { "check": "node src/cli.mjs check", "serve": "node src/cli.mjs serve" },
-  "dependencies": { "yaml": "^2.6.0" },
-  "license": "MIT"
+  "private": true,
+  "version": "0.2.0",
+  "description": "régie — studio de production audiovisuelle assistée par IA. Une bible, un découpage, N moteurs.",
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=20.11"
+  },
+  "scripts": {
+    "dev": "pnpm --parallel --filter @regie/web --filter @regie/worker dev",
+    "dev:web": "pnpm --filter @regie/web dev",
+    "dev:worker": "pnpm --filter @regie/worker dev",
+    "dev:site": "pnpm --filter @regie/site dev",
+    "build": "pnpm --filter @regie/web build",
+    "build:site": "pnpm --filter @regie/site build",
+    "typecheck": "pnpm -r typecheck",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "pnpm --filter @regie/web test:e2e",
+    "db:generate": "pnpm --filter @regie/db generate",
+    "db:migrate": "pnpm --filter @regie/db migrate",
+    "db:deploy": "pnpm --filter @regie/db run deploy",
+    "db:seed": "pnpm --filter @regie/db seed",
+    "db:seed:demo": "pnpm --filter @regie/db seed:demo",
+    "db:studio": "pnpm --filter @regie/db studio",
+    "services": "docker compose up -d postgres redis minio",
+    "test:integration": "vitest run --config vitest.integration.config.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0",
+    "@regie/studio": "workspace:*",
+    "@regie/db": "workspace:*",
+    "@regie/storage": "workspace:*"
+  }
 }

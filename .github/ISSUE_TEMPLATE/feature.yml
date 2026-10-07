@@ -1,0 +1,20 @@
+name: Proposer une fonctionnalité
+description: Une idée pour améliorer régie.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Le besoin
+      description: Quel problème de fabrication d'un film voulez-vous résoudre ?
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: L'idée
+      description: Comment l'imaginez-vous dans l'outil ?
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Ce que vous faites aujourd'hui à la place

@@ -1,81 +1,142 @@
+<div align="center">
+
 # régie
 
 **Une bible, un découpage, N moteurs.**
 
-régie ne génère rien. Il compile. Tu décris ton univers une seule fois dans
-`bible.yaml`, tu découpes ton épisode dans `plans.yaml`, et l'outil en sort les
-prompts de chaque plan pour chaque moteur — image fixe, planche storyboard,
-Veo, Kling, Wan — avec les bonnes images de référence à charger et la bonne
-liste de négatifs.
+Le studio open source pour faire un film avec l'IA — de l'idée au montage —
+sans que vos personnages changent de visage d'un plan à l'autre.
 
-La règle qui justifie l'outil :
+[Site et documentation](https://SITE_URL) · [Démarrer](#démarrer-en-local) · [Contribuer](CONTRIBUTING.md) · [Licence MIT](LICENSE)
 
-> Un modèle n'a aucune mémoire entre deux générations. Tout ce qui n'est ni
-> écrit ni montré en image sera réinventé, différemment à chaque fois.
+![régie — le découpage d'une scène, plan par plan](docs/screens/scene.webp)
 
-Donc : une seule source de vérité, jamais deux. Une bible papier et des prompts
-écrits à la main, ce sont déjà deux sources — elles divergent en une semaine.
+</div>
 
-## Installer
+## Pourquoi
 
-```sh
-npm install
-npm link          # rend la commande `regie` disponible partout
-```
+Un modèle d'IA n'a aucune mémoire entre deux générations. Tout ce qui n'est
+ni écrit ni montré en image est réinventé, différemment à chaque fois : le
+personnage change de visage, le décor de couleur, le costume de coupe.
 
-## L'outil dans le navigateur
+régie part de ce constat. Vous décrivez votre film une seule fois — sa
+**bible** : personnages, lieux, objets, style, lumières, règles — et chaque
+prompt en est **compilé**, jamais réécrit à la main. Les images de référence
+de chaque personnage et de chaque lieu sont chargées automatiquement dans
+chaque plan où ils apparaissent. Un contrôle de continuité bloque les plans
+qui partiraient sur de mauvaises bases, avant qu'ils ne coûtent des crédits.
 
-```sh
-regie serve            # http://localhost:4173
-```
+Le projet est né du besoin d'un réalisateur qui voulait le processus complet,
+de l'écriture à l'export, dans un seul outil. Il est publié pour celles et ceux
+qui sont dans le même cas.
 
-Aucun projet n'est câblé dans l'outil : au premier lancement la liste est vide.
-On crée un projet (un titre, un dossier, un format) ou on importe un dossier qui
-contient déjà `regie/bible.yaml`. Tout le reste s'écrit dans l'interface.
+## Ce que fait régie
 
-| | |
+![De l'idée au film](docs/screens/overview.webp)
+
+| Étape | Dans régie |
 |---|---|
-| **Script** | l'éditeur du script, enregistré dans `Script.md` |
-| **Personnages · Lieux · Objets** | la bible : description gelée, forme courte, costume, marqueur de silhouette, liste d'interdits, image de référence à importer |
-| **Plans** | le découpage : durée, lieu, casting, objets, caméra, action |
-| **Planches** | les regroupements multi-cases |
-| **Réglages** | format, épisode, styles, contraintes de production |
+| **Concept** | de l'idée à la logline, au synopsis, au pitch ; listes de suggestions, éditeur riche, proposition de l'IA à appliquer champ par champ |
+| **Histoire** | 7 structures (trois actes, voyage du héros, Save the Cat, Story Circle, Kishōtenketsu…), temps forts reliés aux scènes |
+| **Bible** | personnages (description gelée, costume, silhouette, interdits, profil narratif), lieux, objets et costumes, monde, styles de rendu, lumières |
+| **Scénario** | éditeur au format cinéma (Fountain), assistance IA sur sélection, versions, export PDF, Word, Final Draft, Fountain |
+| **Découpage** | scènes, dépouillement, mise en scène, plans avec la bibliothèque caméra (cadres, angles, focales, mouvements) |
+| **Prompts** | compilés depuis la bible pour chaque moteur — image fixe, Veo, Kling, Wan/ComfyUI, Runway, planche storyboard — visibles et réécrivables |
+| **Génération** | image, vidéo, audio ; file d'attente, progression en temps réel, coût, relance, changement de modèle |
+| **Cohérence** | références chargées dans chaque plan, contrôle de continuité, analyse IA |
+| **Montage** | espace plein écran : séquences, pistes, sous-titres, assemblage depuis le découpage, rendu MP4/MOV réel, export SRT et EDL |
+| **Production** | storyboard, tableau de production, assets, graphe du projet, assistant IA qui connaît tout le projet, suivi des coûts |
 
-Chaque fiche affiche le prompt compilé correspondant, prêt à copier : prompt de
-feuille de personnage, de plaque de décor, de planche d'objets, d'alignement, et
-pour un plan l'image fixe plus un prompt par moteur vidéo.
+<table>
+<tr>
+<td><img src="docs/screens/prompts.webp" alt="Contrôler avant de générer"></td>
+<td><img src="docs/screens/script.webp" alt="Un vrai éditeur de scénario"></td>
+</tr>
+<tr>
+<td><img src="docs/screens/montage.webp" alt="Monter, rendre, exporter"></td>
+<td><img src="docs/screens/providers.webp" alt="Aucun fournisseur câblé"></td>
+</tr>
+</table>
 
-Le contrôle tourne en permanence dans la colonne de droite. Rien n'est généré par
-l'outil : il écrit des fichiers YAML lisibles, que tu peux éditer à la main sans
-que l'interface les reformate.
+## Principes
 
-### Et Tauri ?
+- **Aucune génération simulée.** Sans fournisseur configuré, l'interface le
+  dit et propose de le configurer. Rien ne fait semblant.
+- **Aucun fournisseur câblé.** OpenAI, Anthropic, Google, Fal, Replicate,
+  Runway, Luma, ElevenLabs, Ollama, ComfyUI, tout service compatible OpenAI
+  (DeepInfra, Together, OpenRouter, Groq…) ou votre propre API : chacun est un
+  adapter derrière une interface commune.
+- **Contrôler avant de brûler des crédits.** Un plan sans référence ne part pas.
+- **Vos données chez vous.** Auto-hébergé, clés des fournisseurs chiffrées en
+  base, stockage privé.
 
-L'interface est du web sans build : l'emballer en application de bureau ne
-demandera que la coquille Rust autour de `public/`. À faire quand ouvrir un
-dossier sans passer par le terminal deviendra gênant.
+## Démarrer en local
 
-## Ce que `check` attrape
+Prérequis : Node 20.11+, pnpm 10, Docker, FFmpeg (pour le rendu du montage).
 
-Avant de brûler le moindre crédit :
+```sh
+git clone https://github.com/edwinfranck/regie.git && cd regie
+cp .env.example .env
+sed -i "s|^AUTH_SECRET=.*|AUTH_SECRET=$(openssl rand -base64 32)|" .env
+sed -i "s|^ENCRYPTION_KEY=.*|ENCRYPTION_KEY=$(openssl rand -base64 32)|" .env
 
-- un mouvement de caméra interdit par le bloc `MOTION` ;
-- un plan plus long que la durée max, là où le style dérive ;
-- plus de personnages dans un plan que la règle ne l'autorise ;
-- deux personnages que la bible déclare trop ressemblants pour partager un plan ;
-- une entité utilisée dont l'image de référence n'existe pas encore — bloquant :
-  aucun plan ne se génère avant ses références ;
-- un bloc gelé sans ref, un personnage sans ligne `NEVER`.
+pnpm install
+pnpm services        # Postgres, Redis, MinIO (docker compose)
+pnpm db:deploy       # migrations
+pnpm db:seed         # templates de prompts
+pnpm dev             # http://localhost:3000 + worker de génération
+```
 
-## Ajouter un moteur
+Créez votre compte (le premier compte de l'instance est administrateur), puis
+**Réglages → Providers IA** pour brancher au moins un modèle de texte et un
+modèle d'image. Sans clé, un modèle local via [Ollama](https://ollama.com)
+fait l'affaire pour le texte.
 
-Un fichier dans `src/targets/`, une ligne dans `src/targets/index.mjs`. Un
-moteur reçoit un plan déjà résolu — personnages, lieu, lumière, caméra,
-négatifs, références — et ne fait que le mettre en forme à sa grammaire.
+Pour découvrir l'outil sur un court-métrage déjà écrit — concept, bible,
+scénario, scènes et découpage, sans aucune image générée :
 
-## État
+```sh
+pnpm db:seed:demo -- --email vous@exemple.com
+```
 
-v0.1 — le compilateur. Pas d'interface, pas d'appel à une API de génération :
-tu copies le prompt dans l'outil de ton choix. La suite (interface locale,
-bibliothèque d'actifs, génération branchée) vient après un épisode complet
-produit avec celui-ci.
+Tout en conteneurs, application comprise : `docker compose --profile app up --build`.
+
+## Structure
+
+```
+apps/
+  web/        Next.js — interface et API (route handlers, temps réel SSE)
+  worker/     worker BullMQ — générations et rendus de montage (FFmpeg)
+  site/       landing et documentation (Fumadocs)
+packages/
+  core/       le domaine pur : caméra, Context Builder, compilateur, linter, Fountain, montage
+  providers/  adapters des fournisseurs d'IA, routeur, coûts, chiffrement des clés
+  studio/     services serveur : bible, pipeline de génération, tâches IA, droits, import
+  db/         schéma Prisma, migrations, seed et projet de démonstration
+  jobs/       files BullMQ et événements temps réel
+  storage/    stockage S3 (AWS, Cloudflare R2, Supabase, MinIO)
+```
+
+| Commande | |
+|---|---|
+| `pnpm dev` | web + worker |
+| `pnpm dev:site` | site et documentation sur :3100 |
+| `pnpm typecheck` · `pnpm test` | types et tests unitaires |
+| `pnpm test:integration` | pipeline complet contre les services locaux |
+| `pnpm test:e2e` | parcours navigateur (Playwright) |
+
+## Documentation
+
+La documentation complète est sur **[le site](https://SITE_URL/docs)** : guide
+d'utilisation étape par étape, fournisseurs, architecture, déploiement. Les
+notes techniques sont aussi dans [`docs/`](docs).
+
+## Contribuer
+
+Toute contribution est bienvenue : code, documentation, traductions, retours
+d'usage. Lisez [CONTRIBUTING.md](CONTRIBUTING.md) — en particulier les
+principes, qui ne sont pas négociables.
+
+## Licence
+
+[MIT](LICENSE). Utilisez, modifiez, redistribuez.

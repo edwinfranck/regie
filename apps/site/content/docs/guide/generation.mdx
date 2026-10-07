@@ -1,0 +1,82 @@
+---
+title: "Génération"
+description: "Images, vidéos et audio — depuis un plan ou en accès libre, avec le prompt visible avant de payer."
+---
+
+Une génération part soit **d'un plan** (le prompt est compilé depuis la bible,
+les références sont jointes), soit **des hubs** Images, Vidéos et Audio (demande
+libre, références au choix). Dans les deux cas elle passe par la même file, et
+son résultat rejoint les [assets](/docs/guide/assets-et-references) du projet.
+
+## Depuis un plan
+
+Dans l'éditeur de plan, la génération rapide montre :
+
+1. la **cible** de compilation (image fixe, cinématique, concise, technique,
+   Runway), choisie d'après le modèle et modifiable ;
+2. le **prompt compilé** et le négatif, tels qu'ils partiront — réécrivez-les
+   si besoin : la réécriture est enregistrée sur le plan, pour cette cible ;
+3. les **références** qui partiront avec, dans l'ordre ;
+4. le **modèle** : AUTO (le routeur choisit) ou un modèle forcé ;
+5. l'estimation du coût.
+
+Le résultat est rattaché au plan, à sa scène, à ses personnages, à son lieu.
+
+## Images
+
+Modes : **texte → image** et **image → image**. Réglages : modèle, format,
+qualité, steps, CFG, seed, nombre d'images, jusqu'à six références. Un
+résultat peut devenir la **référence** d'un personnage, d'un lieu ou d'un
+objet (menu **Définir comme référence**).
+
+Deux aides pour une demande libre (« Marie marche dans la rue sous la
+pluie. ») :
+
+- **Enrichir depuis la bible** repère dans le texte les personnages, lieux et
+  objets cités, par nom ou par code, injecte leurs descriptions gelées et
+  propose leurs références — gratuit et déterministe ;
+- **Réécrire avec l'IA** (tâche `enrich`) va plus loin et décompose la demande
+  en sujet, action, environnement, lumière, caméra, objectif, composition,
+  ambiance, style et continuité.
+
+## Vidéos
+
+| Mode | Entrées |
+|---|---|
+| Texte → vidéo | le prompt seul |
+| Image → vidéo | une **première image** (obligatoire), des références |
+| Première et dernière image | les deux images bornent le mouvement |
+| Références → vidéo | des images de référence, sans image de départ |
+
+Le prompt vidéo ajoute les interdits de mouvement du projet et gère la parole :
+un plan sans dialogue demande des lèvres fermées, un plan dialogué donne la
+réplique.
+
+## Audio
+
+- **voix** (synthèse vocale : OpenAI, ElevenLabs) ;
+- **effets sonores** (ElevenLabs, fal, Replicate) ;
+- **musique** (via fal ou Replicate).
+
+## Suivre une génération
+
+Chaque demande entre dans une file et passe par les états *en file*, *en
+cours*, *terminée*, *échouée* ou *annulée*. La progression s'affiche en direct,
+avec la position dans la file. Une génération en cours s'annule ; une
+génération terminée ou échouée se **relance**, ou se relance **sur un autre
+modèle**.
+
+Une erreur n'est jamais affichée brute : provider, modèle, message traduit
+(« Clé API refusée par le provider. », « Contenu refusé par la politique du
+provider. »), et deux actions, **Réessayer** et **Changer de modèle**. Les
+erreurs passagères (limite de débit, délai, réseau) sont réessayées
+automatiquement trois fois ; un refus ne l'est pas — inutile de le payer trois
+fois.
+
+<Callout type="warn">
+  Sans aucun modèle capable de la tâche, la demande est refusée **avant**
+  d'entrer en file, avec l'action « Configurer un provider ». Rien n'est
+  simulé.
+</Callout>
+
+Le détail technique est dans [Génération (technique)](/docs/generation).

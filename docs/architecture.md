@@ -1,0 +1,158 @@
+# Architecture
+
+## Vue d'ensemble
+
+```
+                          régie
+                            │
+                      PROJECT ENGINE
+            (projets, espaces de travail, droits, versions)
+                            │
+     ┌──────────────────────┼───────────────────────┐
+     │                      │                       │
+STORY ENGINE        PRODUCTION ENGINE           AI ENGINE
+concept, histoire   scènes, plans,              Context Builder
+bible (personnages, storyboard, assets,         Prompt Compiler
+lieux, objets,      production, continuité      Model Router
+monde, styles)                                  Provider Registry
+scénario
+     │                      │                       │
+     └──────────────────────┼───────────────────────┘
+                            │
+                   GENERATION ENGINE
+          file BullMQ → worker → adapter → stockage
+                            │
+              ┌─────────────┼─────────────┐
+            IMAGE         VIDEO         AUDIO
+              └─────────────┼─────────────┘
+                            │
+                   STORAGE (S3) → assets
+                            │
+               TIMELINE (phase 2) → EXPORT
+```
+
+Chaque moteur correspond à du code identifiable :
+
+| Moteur | Où |
+|---|---|
+| Project engine | `packages/db` (schéma), `packages/studio/src/{projects,access,revisions}.ts` |
+| Story engine | routes `apps/web/src/app/api/projects/[projectId]/{concept,story,bible,world,script}` |
+| Production engine | routes `scenes`, `shots`, `assets`, `lint` ; `packages/core/src/lint.ts` |
+| AI engine | `packages/core/src/{context,targets,references}.ts`, `packages/providers/src/router.ts`, `packages/studio/src/ai.ts` |
+| Generation engine | `packages/studio/src/generations.ts`, `packages/jobs`, `apps/worker` |
+
+## Les paquets
+
+Le monorepo est découpé pour que le cœur ne dépende de rien :
+
+```
+core  ←  providers         (aucune dépendance entre eux)
+  ↖        ↖
+    studio  →  db, jobs, storage
+      ↑
+  web, worker
+```
+
+- **core** est du TypeScript pur, sans I/O : on le teste sans base, on
+  l'importe côté navigateur (bibliothèque caméra, libellés, schémas Zod).
+- **providers** ne connaît pas la base : un adapter reçoit une configuration
+  déchiffrée et une requête, renvoie des fichiers.
+- **studio** fait le lien : il charge la bible depuis Prisma, appelle le
+  compilateur, route vers un modèle, persiste le résultat.
+- **web** n'écrit que des route handlers minces (validation, droits,
+  appel à studio) et l'interface.
+
+Les paquets sont servis en TypeScript source (pas de build intermédiaire) :
+Next les transpile (`transpilePackages`), le worker tourne sous `tsx`.
+
+## Flux d'une génération
+
+```
+Interface ── POST /api/projects/:id/generations ──▶ route handler
+                                                    │ Zod, RBAC, rate limit
+                                                    ▼
+                                   studio.createGeneration
+                                   │ routage AUTO ou modèle forcé
+                                   │ refus 424 si aucun provider configuré
+                                   │ Generation (QUEUED) en base
+                                   ▼
+                              BullMQ (Redis) ──────▶ worker
+                                                    │ studio.runGeneration
+                                                    │ entrées depuis S3
+                                                    ▼
+                                             adapter du provider
+                                                    │ progression → Redis pub/sub
+                                                    ▼
+                                      S3 (fichiers) + Asset + AssetLink
+                                      + Usage (coût) + référence éventuelle
+                                                    │
+Interface ◀── SSE /api/events ◀── Redis pub/sub ◀───┘
+```
+
+Le texte (assistant, concept, réécriture) ne passe pas par la file : il est
+attendu en secondes et en streaming. Il est quand même tracé (Generation +
+Usage). Détails dans [generation.md](generation.md).
+
+## Le contexte avant le prompt
+
+Aucune génération ne part du seul texte de l'utilisateur. Pour un plan :
+
+```
+generate(shotId)
+  loadBible(projectId)        style actif, lumières, personnages, lieux, objets, règles
+  loadScenes / loadShotContext
+        ▼
+  resolveShot(bible, shot, scene)     ← Context Builder (packages/core/src/context.ts)
+        │ hérite lieu et lumière de la scène
+        │ assemble négatifs image et vidéo
+        │ liste les références à charger
+        ▼
+  compile(spec, target)               ← Prompt Compiler (packages/core/src/targets/)
+        ▼
+  QuickGenerate : prompt visible et éditable → file
+```
+
+Les tâches d'écriture (concept, fiche, découpage, continuité, assistant)
+reçoivent de même un résumé du projet (`projectDigest`). Voir
+[prompts.md](prompts.md).
+
+## Interface
+
+- Next.js 16, App Router, React 19. Pages projet sous
+  `app/(app)/projects/[projectId]/…`, API sous `app/api/…`.
+- Tailwind 4 + shadcn/ui (Radix). Tous les tokens de couleur sont dans
+  `globals.css` ; thème clair par défaut, sombre en option.
+- TanStack Query pour les données, Zustand pour l'état d'interface (palette,
+  assistant, état d'enregistrement), dnd-kit, TipTap (scénario), Recharts.
+- Temps réel : une seule connexion SSE par onglet (`hooks/use-events.ts`) qui
+  invalide le cache au fil des événements.
+
+## Sécurité
+
+| Exigence | Mise en œuvre |
+|---|---|
+| Sessions | Auth.js v5, JWT signé (`AUTH_SECRET`), cookies httpOnly SameSite=Lax |
+| CSRF | Auth.js pour ses routes ; pour l'API, contrôle de l'en-tête Origin sur toute requête non GET (`lib/api.ts`) |
+| RBAC | `studio/access.ts` : rôle effectif = max(rôle projet, rôle espace), actions par rôle ; 404 plutôt que 403 sur un projet invisible |
+| Validation | Zod sur chaque corps de requête, schémas partagés avec les formulaires |
+| Clés API | AES-256-GCM (`ENCRYPTION_KEY`), déchiffrées seulement dans le worker ou la route qui appelle, jamais renvoyées (indice « …ab12 ») |
+| Uploads | taille max (`UPLOAD_MAX_MB`), type vérifié par signature binaire, pas par l'extension |
+| Stockage | bucket privé ; `/api/files/:id` contrôle les droits puis redirige vers une URL signée d'une heure |
+| Rate limiting | fenêtre fixe dans Redis sur génération, IA, upload, inscription, export |
+| Audit | `AuditLog` : connexions, créations, providers, clés, admin |
+
+Changer de solution d'authentification : tout est confiné dans
+`apps/web/src/lib/auth.ts`, `auth.config.ts` et `proxy.ts`.
+
+## Choix et renoncements
+
+- **Route handlers Next plutôt que NestJS** : une seule application à
+  déployer ; la logique métier vit dans `studio`, réutilisable si l'API doit un
+  jour sortir de Next.
+- **Une table `Revision` générique** plutôt que `CharacterVersion`,
+  `LocationVersion`, etc. : comparer et restaurer fonctionnent de la même
+  façon pour toute entité.
+- **Fountain comme format de stockage du scénario** : lisible, diffable,
+  exportable ; l'état de l'éditeur est gardé à côté pour ne rien perdre.
+- **Le compilateur reste déterministe** : l'IA propose, le compilateur
+  assemble. Deux compilations du même plan donnent le même prompt.

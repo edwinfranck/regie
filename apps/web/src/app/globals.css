@@ -1,0 +1,207 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+  Design system de régie.
+  Sobre, contrasté, lisible : fond blanc, texte presque noir, une seule
+  couleur d'accent réservée à ce qui coûte (générer) et à l'état actif.
+  Angles quasi droits, peu d'ombres, pas de petites majuscules espacées.
+  Toutes les couleurs passent par ces variables : aucune couleur en dur
+  dans les composants.
+*/
+
+:root {
+  --radius: 0.25rem;
+
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.16 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.16 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.16 0 0);
+  --primary: oklch(0.16 0 0);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.955 0 0);
+  --secondary-foreground: oklch(0.16 0 0);
+  --muted: oklch(0.965 0 0);
+  --muted-foreground: oklch(0.44 0 0);
+  --accent: oklch(0.945 0 0);
+  --accent-foreground: oklch(0.16 0 0);
+  --destructive: oklch(0.55 0.21 27);
+  --border: oklch(0.88 0 0);
+  --input: oklch(0.82 0 0);
+  --ring: oklch(0.16 0 0);
+
+  /* Signal : l'accent de l'action qui coûte des crédits, et de l'état actif. */
+  --signal: oklch(0.6 0.19 40);
+  --signal-foreground: oklch(0.99 0 0);
+
+  --success: oklch(0.52 0.13 150);
+  --warning: oklch(0.66 0.15 70);
+  --info: oklch(0.5 0.12 250);
+
+  /* Le « plateau » : fond neutre derrière les images et les vidéos. */
+  --stage: oklch(0.94 0 0);
+
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.16 0 0);
+  --sidebar-border: oklch(0.9 0 0);
+  --sidebar-accent: oklch(0.93 0 0);
+
+  --chart-1: oklch(0.55 0.15 250);
+  --chart-2: oklch(0.6 0.19 40);
+  --chart-3: oklch(0.52 0.13 150);
+  --chart-4: oklch(0.6 0.16 310);
+  --chart-5: oklch(0.66 0.15 70);
+}
+
+.dark {
+  --background: oklch(0.15 0 0);
+  --foreground: oklch(0.96 0 0);
+  --card: oklch(0.19 0 0);
+  --card-foreground: oklch(0.96 0 0);
+  --popover: oklch(0.2 0 0);
+  --popover-foreground: oklch(0.96 0 0);
+  --primary: oklch(0.96 0 0);
+  --primary-foreground: oklch(0.15 0 0);
+  --secondary: oklch(0.24 0 0);
+  --secondary-foreground: oklch(0.96 0 0);
+  --muted: oklch(0.22 0 0);
+  --muted-foreground: oklch(0.72 0 0);
+  --accent: oklch(0.26 0 0);
+  --accent-foreground: oklch(0.96 0 0);
+  --destructive: oklch(0.65 0.2 25);
+  --border: oklch(0.3 0 0);
+  --input: oklch(0.36 0 0);
+  --ring: oklch(0.9 0 0);
+  --signal: oklch(0.7 0.17 45);
+  --signal-foreground: oklch(0.15 0 0);
+  --success: oklch(0.7 0.14 150);
+  --warning: oklch(0.78 0.14 75);
+  --info: oklch(0.72 0.11 250);
+  --stage: oklch(0.11 0 0);
+  --sidebar: oklch(0.17 0 0);
+  --sidebar-foreground: oklch(0.96 0 0);
+  --sidebar-border: oklch(0.27 0 0);
+  --sidebar-accent: oklch(0.25 0 0);
+}
+
+@theme inline {
+  --font-sans: var(--font-lexend), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+  --font-script: "Courier Prime", "Courier New", var(--font-jetbrains), monospace;
+
+  --radius-sm: calc(var(--radius) - 1px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-signal: var(--signal);
+  --color-signal-foreground: var(--signal-foreground);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
+  --color-stage: var(--stage);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply antialiased;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "ss01", "cv11";
+  }
+  /* Les listes déroulantes natives restantes suivent le thème. */
+  select {
+    @apply rounded-md border border-input bg-background px-2 py-1 text-sm;
+  }
+  ::selection {
+    background: color-mix(in oklch, var(--signal) 30%, transparent);
+  }
+}
+
+/* ── Éditeur de scénario : mise en page standard ── */
+.screenplay {
+  font-family: var(--font-script);
+  font-size: 12pt;
+  line-height: 1.35;
+}
+.screenplay p {
+  margin: 0;
+  min-height: 1.35em;
+}
+.screenplay [data-el="scene_heading"] { font-weight: 700; text-transform: uppercase; margin-top: 1.6em; }
+.screenplay [data-el="action"] { margin-top: 0.9em; }
+.screenplay [data-el="character"] { text-transform: uppercase; margin-left: 37%; margin-top: 0.9em; }
+.screenplay [data-el="parenthetical"] { margin-left: 30%; margin-right: 30%; }
+.screenplay [data-el="dialogue"] { margin-left: 22%; margin-right: 18%; }
+.screenplay [data-el="transition"] { text-transform: uppercase; text-align: right; margin-top: 0.9em; }
+.screenplay [data-el="centered"] { text-align: center; margin-top: 0.9em; }
+.screenplay [data-el="note"] { color: var(--muted-foreground); font-style: italic; margin-top: 0.9em; }
+.screenplay .is-empty::before {
+  content: attr(data-placeholder);
+  color: var(--muted-foreground);
+  pointer-events: none;
+  float: left;
+  height: 0;
+}
+.screenplay .ProseMirror { outline: none; }
+.screenplay .ProseMirror > *:first-child { margin-top: 0; }
+
+/* Défilement sans barre visible (sidebar) : la molette et le tactile marchent toujours. */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ── Champs rédigés en éditeur riche ── */
+.rich-content > * + * { margin-top: 0.6em; }
+.rich-content h2 { font-size: 1.05rem; font-weight: 600; }
+.rich-content h3 { font-size: 0.95rem; font-weight: 600; }
+.rich-content ul { list-style: disc; padding-left: 1.25rem; }
+.rich-content ol { list-style: decimal; padding-left: 1.25rem; }
+.rich-content li > p { margin: 0; }
+.rich-content blockquote { border-left: 2px solid var(--border); padding-left: 0.75rem; color: var(--muted-foreground); font-style: italic; }
+.rich-content strong { font-weight: 600; }
+.rich-content p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--muted-foreground);
+  float: left;
+  height: 0;
+  pointer-events: none;
+}

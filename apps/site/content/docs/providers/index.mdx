@@ -1,0 +1,92 @@
+---
+title: "Brancher un provider"
+description: "Providers, adapters, modèles — et comment régie choisit qui génère."
+icon: Plug
+---
+
+Un **provider** est un compte chez un fournisseur (ou un serveur local) ; un
+**adapter** est le code qui sait lui parler ; un **modèle** est ce qu'on
+choisit au moment de générer. Aucune partie de l'application n'appelle une API
+de génération directement.
+
+```
+Provider Registry
+  Provider (clé chiffrée, URL, config)
+    ↓
+  Capability : TEXT · IMAGE · VIDEO · AUDIO · EMBEDDING
+    ↓
+  Model (id chez le provider, modes, prix, qualité, vitesse)
+    ↓
+  Adapter (packages/providers/src/adapters/*)
+    ↓
+  Request → Job (BullMQ) → Result (fichiers, usage)
+```
+
+## Ajouter un provider
+
+Dans l'interface : **Réglages → Providers IA → Ajouter**. Un provider peut
+être déclaré pour toute l'instance (administrateur) ou pour un espace de
+travail.
+
+1. choisissez le fournisseur dans le catalogue ;
+2. collez la clé : elle est chiffrée (AES-256-GCM) avant d'être écrite, et
+   l'interface n'en affiche que les quatre derniers caractères ;
+3. **Tester la connexion** vérifie la clé sans rien générer de facturable ;
+4. vérifiez les modèles proposés, leurs identifiants et leurs prix.
+
+Au premier lancement, `pnpm db:seed` crée les providers dont une variable
+`SEED_*` est posée dans `.env` (`SEED_OPENAI_API_KEY`, `SEED_OLLAMA_URL`…).
+
+## Adapters disponibles
+
+| Adapter | Capacités | Notes |
+|---|---|---|
+| `openai` | texte, image (gpt-image, avec références), vidéo (Sora 2), voix (TTS) | |
+| `anthropic` | texte | SDK officiel ; bascule serveur en cas de refus sur les modèles qui l'acceptent |
+| `google` | texte (Gemini), image (Gemini Image, Imagen), vidéo (Veo, avec première et dernière image) | |
+| `fal` | image, vidéo, audio | Flux, SDXL, Kling, Hailuo, Veo, Luma… via une seule clé |
+| `replicate` | image, vidéo, audio | modèles officiels (`owner/name`) ou communautaires (`owner/name:version`) |
+| `runway` | image (Gen-4 Image, références taguées), vidéo (Gen-4 Turbo, première et dernière image) | |
+| `luma` | image (Photon), vidéo (Ray 2) | exige des URLs publiques : `S3_PUBLIC_URL` |
+| `elevenlabs` | voix, effets sonores | voix existantes du compte ; le clonage se fait chez eux |
+| `ollama` | texte | local ; découverte des modèles installés — voir [Local](/docs/providers/local) |
+| `comfyui` | image, vidéo | local ; vos workflows exportés en « API » — voir [ComfyUI](/docs/providers/comfyui) |
+| `openai-compatible` | texte, image | DeepInfra, Together, OpenRouter, Groq, Mistral… et LM Studio, vLLM, llama.cpp — voir [Services compatibles](/docs/providers/compatibles-openai) |
+| `custom-http` | tout | endpoint maison synchrone, corps JSON à variables |
+
+Les modèles proposés à l'ajout d'un provider (presets) sont un point de
+départ : identifiants et prix se modifient dans **Réglages → Providers IA**.
+Les prix servent à l'estimation des coûts ; vérifiez-les chez le fournisseur.
+
+## Routage
+
+Pour chaque tâche (`TEXT`, `IMAGE_GENERATION`, `VIDEO_GENERATION`,
+`AUDIO_GENERATION`, `EMBEDDING`), une liste ordonnée de modèles peut être
+déclarée (instance, surchargeable par espace de travail). En mode **AUTO** :
+
+1. les modèles d'une autre capacité, désactivés, sans clé, qui ne font pas le
+   mode demandé ou trop courts pour la durée demandée sont écartés (avec la
+   raison) ;
+2. les modèles routés passent en premier, dans leur ordre ;
+3. les autres sont notés sur qualité, coût et vitesse selon la préférence
+   (`quality` par défaut, `cost`, `speed`) ; un format d'image non natif
+   pénalise.
+
+L'utilisateur peut toujours forcer un modèle. Le code :
+`packages/providers/src/router.ts` (fonction pure, testée) et
+`packages/studio/src/providers.ts`.
+
+<Callout type="warn" title="Aucun candidat, aucune file">
+  Sans aucun modèle capable, la demande est refusée **avant** d'entrer en file :
+  HTTP 424, code `provider_not_configured`, avec l'action « Configurer un
+  provider ». Rien n'est simulé.
+</Callout>
+
+## Un fournisseur absent du catalogue
+
+Dans l'ordre :
+
+1. il parle le format OpenAI → [`openai-compatible`](/docs/providers/compatibles-openai) ;
+2. il a son propre format, en une requête → [`custom-http`](/docs/providers/compatibles-openai#api-personnalisée--custom-http) ;
+3. sinon → [écrire un adapter](/docs/providers/ajouter-un-adapter), une
+   cinquantaine de lignes le plus souvent.

@@ -1,0 +1,33 @@
+name: Signaler un bug
+description: Quelque chose ne marche pas comme prévu.
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: Ce qui se passe
+      description: Ce que vous avez fait, ce que vous attendiez, ce qui s'est passé.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Étapes pour reproduire
+      placeholder: "1. Ouvrir…\n2. Cliquer sur…\n3. Voir l'erreur…"
+    validations:
+      required: true
+  - type: input
+    id: provider
+    attributes:
+      label: Provider et modèle concernés (si génération)
+      placeholder: "Fal · Kling 2.1, Ollama · qwen2.5…"
+  - type: textarea
+    id: env
+    attributes:
+      label: Environnement
+      description: Système, navigateur, version de régie (commit), Docker ou non.
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs ou capture
+      description: Sortie du serveur ou du worker, capture d'écran. Retirez vos clés API.

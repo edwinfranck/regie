@@ -1,0 +1,132 @@
+---
+title: "Prompts"
+description: "Context Builder et compilateur : comment un plan devient un prompt."
+icon: Braces
+---
+
+Le prompt d'un plan n'est jamais écrit à la main : il est **compilé** depuis la
+bible. Le texte final reste visible et modifiable — une réécriture manuelle
+est enregistrée sur le plan, par cible, et l'emporte sur la compilation.
+
+## 1. La bible
+
+Tout ce qui part dans un prompt vit dans des champs dédiés :
+
+| Élément | Champs utilisés par le compilateur |
+|---|---|
+| Style actif (LOOK) | `block` (ou `short`), `never` |
+| Personnage | `code`, `name`, `block` (description gelée), `short` (une phrase), `costume`, `silhouette`, `never`, référence |
+| Lieu | `block`, `short`, `never`, `sound`, plaque de référence |
+| Objet / costume | `block`, `short`, `never`, référence |
+| Lumière | `block`, `short`, `never` ; un état par défaut |
+| Règles du projet | `blocks` injectés partout, `maxCharactersPerShot`, `neverTogether`, planches communes (`lineupKey`, `propsSheetKey`) |
+| Mouvement | `clipSeconds`, `allowedMoves`, `short`, `never` (négatifs vidéo) |
+
+Les champs visuels s'écrivent en anglais : les modèles d'image les
+comprennent mieux. Le reste de l'interface est en français.
+
+## 2. Le Context Builder
+
+`resolveShot(bible, shot, scene)` (`packages/core/src/context.ts`) produit un
+`ShotSpec` :
+
+- personnages et objets résolus (erreur explicite si un id n'existe pas) ;
+- lieu et lumière du plan, sinon ceux de la scène, sinon la lumière par
+  défaut ;
+- **références à charger**, dans l'ordre où un moteur à références multiples
+  les pondère : feuilles des personnages, échelle des tailles s'il y en a
+  plusieurs, planche d'objets, objets, plaque du lieu, style ;
+- **deux listes de négatifs** : image (style + personnages + objets + lieu +
+  lumière) et vidéo (la même + les interdits de mouvement) ;
+- caméra, composition, transition, durée, format, émotion de la scène,
+  réécritures manuelles.
+
+Pour une demande libre (« Marie marche dans la rue sous la pluie. »),
+`detectEntities` repère dans le texte les personnages, lieux et objets par
+nom ou par code et injecte leurs blocs gelés — gratuit et déterministe. La
+tâche IA `enrich` va plus loin et décompose en sujet, action, environnement,
+lumière, caméra, objectif, composition, ambiance, style et continuité.
+
+## 3. Les cibles
+
+Chaque moteur a sa grammaire (`packages/core/src/targets/`) :
+
+| Cible | Pour | Forme |
+|---|---|---|
+| `still` | image fixe du plan | cahier des charges complet : style, format, cadre, décor, lumière, chaque personnage (bloc + costume), objets, règles, ambiance, action |
+| `veo` | Veo, Luma, Sora — variante **cinématique** | prose d'un seul tenant ; dialogue explicite ou lèvres fermées |
+| `kling` | Kling, Hailuo — variante **concise** | ≤ 70 mots, personnages par marqueur de silhouette, 12 négatifs max |
+| `wan` | Wan, LTX, ComfyUI — variante **technique** | champs structurés `camera: … subject: …`, négatif séparé |
+| `runway` | Runway Gen-4 | ce qui bouge seulement (l'image de départ porte le reste), ≤ 1000 caractères |
+| `sheet` | planche storyboard multi-cases | tous les plans d'une planche en une seule image : chaque personnage décrit une fois, une ligne par case |
+
+`targetForAdapter(adapter, kind)` choisit la grammaire naturelle d'un
+adapter ; l'utilisateur peut toujours en choisir une autre.
+
+Pourquoi une planche en une passe : dans une seule génération, le modèle
+dessine toutes les cases avec le même personnage. Vingt générations isolées
+donnent vingt personnages différents.
+
+## 4. Les prompts de référence
+
+Ce sont les seuls prompts générés **sans** référence en entrée, puisqu'ils
+fabriquent les références (`packages/core/src/references.ts`) :
+
+- personnage : feuille (face, trois-quarts, dos), portrait, expressions,
+  poses, tête sous plusieurs angles, costume seul ;
+- lieu : plaque d'ensemble, intérieur, extérieur, nuit, pluie ;
+- planche d'objets à échelle commune, échelle des tailles des personnages.
+
+Générer la feuille d'un personnage avec `setAsRefOf` en fait sa référence :
+elle est ensuite chargée automatiquement dans chaque plan où il apparaît.
+C'est le moteur de cohérence.
+
+## 5. Le contrôle
+
+`lint(bible, scenes, shots)` (`packages/core/src/lint.ts`) tourne à chaque
+affichage, gratuitement :
+
+- **bloquant** : un personnage ou un lieu du plan sans référence ;
+- **erreur** : mouvement interdit, plan trop long, trop de personnages, duo
+  déclaré trop ressemblant hors plan de groupe, vocabulaire caméra inconnu,
+  numéros de scène en double, personnage gelé sans référence ;
+- **avertissement** : lumière qui contredit l'heure de la scène, lieu du plan
+  différent de la scène, plan de groupe sans stratégie de repli, pas de style,
+  durée totale loin de la cible ;
+- **info** : personnage absent de la distribution de la scène, scène sans
+  plan, personnage jamais utilisé.
+
+Ce qui demande de lire le texte (une blessure qui disparaît, un costume
+décrit autrement) relève de l'analyse IA de continuité, lancée à la demande.
+
+## 6. Les tâches d'écriture
+
+`packages/studio/src/ai.ts`. Chacune reçoit `projectDigest` — le projet
+résumé : concept, monde, style, personnages (avec objectif, arc, et s'ils
+ont une feuille), lieux, objets, structure, scènes et plans, contrôle — et
+demande une réponse JSON validée. Les réponses sont des **propositions** :
+rien n'est écrit en base sans que l'auteur applique.
+
+| Tâche | Produit |
+|---|---|
+| `concept` | logline, tagline, synopsis court et long, pitch, genre, thèmes, conflits, enjeux, univers, personnages potentiels |
+| `character`, `location` | fiche complète, blocs visuels en anglais |
+| `beats` | contenu des temps forts de la structure choisie |
+| `script` | continuer, réécrire, raccourcir, développer, dialogues, tension, humour, ton — en Fountain |
+| `coherence` | incohérences du scénario avec la bible |
+| `breakdown` | dépouillement d'une scène |
+| `direction` | mise en scène et découpage proposé |
+| `shots` | découpage technique respectant les règles du linter |
+| `continuity` | problèmes de continuité au-delà du contrôle déterministe |
+| `enrich` | prompt libre décomposé et assemblé |
+
+L'assistant de production reçoit le même résumé et peut proposer des actions
+applicables d'un clic (ajouter des plans à une scène, ouvrir une page), dans
+un bloc `regie-actions` que l'interface interprète.
+
+## Templates
+
+**Réglages → Templates de prompts** : bibliothèque par catégorie
+(SCREENWRITING, CHARACTER, LOCATION, IMAGE, VIDEO, CAMERA, LIGHTING,
+DIALOGUE, STORYBOARD, SOUND) avec variables `{{nom}}`. Ils servent de point
+de départ ; le compilateur, lui, ne dépend d'aucun template.

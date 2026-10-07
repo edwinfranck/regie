@@ -1,0 +1,58 @@
+---
+title: "Scènes et découpage"
+description: "La story map, le dépouillement, la mise en scène et le découpage en plans."
+---
+
+## La story map
+
+**Scènes** montre les scènes dans l'ordre du film. Glissez une scène pour la
+déplacer : les numéros et les codes de plans suivent. Chaque scène a un numéro,
+un titre, intérieur ou extérieur, un moment de la journée, un lieu, une
+lumière, une distribution, une émotion et un statut de production.
+
+## Le dépouillement
+
+Le dépouillement liste ce que la scène demande : personnages, figurants,
+objets, costumes, véhicules, effets, son. **Dépouillement assisté** (tâche
+`breakdown`) le propose depuis le texte de la scène.
+
+## La mise en scène
+
+Intention, rythme, placement : **Mise en scène assistée** (tâche `direction`)
+propose une mise en scène et un premier découpage, à partir de la scène et de
+la bible.
+
+## Le découpage
+
+Un **plan** porte un code calculé (`12A` : scène 12, premier plan), une durée,
+une action, un dialogue éventuel, des personnages, des objets, et le
+vocabulaire caméra :
+
+| Élément | Choix |
+|---|---|
+| Valeur de plan | 13 cadres, du très large au très gros plan |
+| Angle | 7 angles (hauteur d'œil, plongée, contre-plongée…) |
+| Mouvement | 13 mouvements (fixe, travelling avant, panoramique…) |
+| Objectif | focales |
+| Composition | règle des tiers, centré, amorce… |
+| Transition | vers le plan suivant |
+
+Ce vocabulaire est celui que le compilateur comprend : chaque valeur se traduit
+dans la grammaire de chaque moteur. Un plan hérite du lieu et de la lumière de
+sa scène, sauf s'il les remplace.
+
+**Découpage proposé par l'IA** (tâche `shots`) produit une liste de plans qui
+respecte les règles du projet (nombre de personnages, mouvements autorisés,
+durée des clips). Chaque plan proposé s'accepte, se modifie ou s'écarte.
+
+## L'éditeur de plan
+
+Cliquer un plan ouvre son éditeur : tous les champs ci-dessus, le **prompt
+compilé** pour chaque cible (visible, réécrivable), les références qui
+partiront avec lui, ses images et vidéos, et la génération rapide. Voir
+[Génération](/docs/guide/generation).
+
+## Le tableau de production
+
+**Tableau de production** range les scènes par étape de fabrication. Glissez
+une carte d'une colonne à l'autre pour changer son statut.

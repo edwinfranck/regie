@@ -1,0 +1,16 @@
+{
+  "name": "@regie/studio",
+  "private": true,
+  "version": "0.2.0",
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "typecheck": "tsc --noEmit" },
+  "dependencies": {
+    "@regie/core": "workspace:*",
+    "@regie/db": "workspace:*",
+    "@regie/jobs": "workspace:*",
+    "@regie/providers": "workspace:*",
+    "@regie/storage": "workspace:*",
+    "image-size": "^2.0.2"
+  }
+}

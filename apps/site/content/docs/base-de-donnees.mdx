@@ -1,0 +1,94 @@
+---
+title: "Base de données"
+description: "PostgreSQL et Prisma : le schéma expliqué, en trois familles."
+icon: Database
+---
+
+PostgreSQL, Prisma 7 (client généré dans `packages/db/src/generated`,
+connexion par l'adaptateur `pg`). Schéma : `packages/db/prisma/schema.prisma`.
+
+```sh
+pnpm db:migrate     # après modification du schéma (crée et applique une migration)
+pnpm db:generate    # régénère le client (Prisma 7 ne le fait plus à la migration)
+pnpm db:deploy      # applique les migrations en production
+pnpm db:studio
+```
+
+## Trois familles
+
+### Identité et collaboration
+
+- `User` (mot de passe haché bcrypt, `isAdmin`, `disabled`), `Account`,
+  `Session`, `VerificationToken` (Auth.js), `ApiKey` (jetons d'accès
+  personnels, hachés).
+- `Workspace` et `WorkspaceMember` ; `ProjectMember` ; enum `Role` :
+  OWNER, ADMIN, DIRECTOR, WRITER, ART_DIRECTOR, EDITOR, VIEWER.
+- `Comment` (fil, mentions, résolu), `Notification`, `AuditLog`.
+- `Revision` : historique générique, un instantané JSON par version et par
+  entité (`entityType`, `entityId`, `version`). Tient lieu de
+  CharacterVersion, LocationVersion, ScriptVersion, AssetVersion.
+
+### Le film
+
+- `Project` : format (ratio, résolution, fps), langue, type (`ProjectKind`),
+  stade (`ProjectStage`), `rules` et `motion` (JSON validés par
+  `projectRulesSchema` et `motionRulesSchema`), couverture.
+- `Concept` (1–1), `World` (1–1, `sections` JSON), `Script` (1–1, `fountain`
+  + `doc` de l'éditeur), `Story` (1–1) et `StoryBeat`.
+- La bible : `Character`, `Location`, `Prop` (`PropKind` : accessoire,
+  costume, véhicule, animal, décor, effet), `Style` (un actif), `LightState`
+  (un par défaut). Chaque entité a un `code` court unique dans le projet (CH1,
+  L2, P3…) repris tel quel dans les prompts, et une référence `refAssetId`.
+  Les champs lus par le compilateur sont des colonnes ; la fiche narrative
+  d'un personnage est dans `profile` (JSON).
+- La structure : `Act`, `Sequence`, `Scene` (dépouillement `breakdown` et
+  mise en scène `direction` en JSON, statut de production), `SceneCharacter`.
+- Le découpage : `Shot` (code 12A calculé depuis le numéro de scène et
+  l'ordre, vocabulaire caméra, durée, `overrides` par cible, `frameAssetId`
+  pour la case de storyboard), `ShotCharacter`, `ShotProp`, `Storyboard` et
+  `StoryboardFrame` (planches).
+
+### La fabrication
+
+- `Provider` (clé chiffrée `apiKeyEnc` + indice, `config` JSON, portée
+  instance ou espace), `Model` (id chez le provider, capacité, modes, prix,
+  notes de qualité et vitesse, formats), `ModelRoute` (routage par tâche).
+- `Generation` (demande complète : prompt, négatif, paramètres, entrées,
+  contexte de routage, statut, progression, erreur, coût, durée, id externe)
+  et `GenerationJob` (une ligne par tentative dans la file).
+- `Asset` (fichier dans S3 : type, source, dimensions, durée, référence et
+  sa nature, tags, génération d'origine, chaîne de versions `parentId`) et
+  `AssetLink` (le « Character ID » : chaque asset est rattaché aux
+  personnages, lieux, objets, scènes et plans qu'il montre).
+- `Usage` : registre des coûts.
+- `Prompt` (prompts figés), `PromptTemplate`.
+- `Timeline`, `TimelineTrack`, `TimelineClip` (montage, phase 2).
+- `AssistantThread`, `AssistantMessage`.
+
+## Relations clés
+
+```
+Workspace ─┬─ WorkspaceMember ── User
+           ├─ Project ─┬─ Concept · Story(─ StoryBeat) · World · Script
+           │           ├─ Character · Location · Prop · Style · LightState
+           │           ├─ Act ─ Sequence ─ Scene ─┬─ SceneCharacter
+           │           │                          └─ Shot ─┬─ ShotCharacter · ShotProp
+           │           │                                   └─ StoryboardFrame
+           │           ├─ Asset ── AssetLink ──▶ Character | Location | Prop | Scene | Shot
+           │           ├─ Generation ─┬─ GenerationJob
+           │           │              ├─ Asset (sorties)
+           │           │              └─ Usage
+           │           └─ Revision · Comment · Timeline
+           └─ Provider ─ Model ─ ModelRoute
+```
+
+La suppression d'un projet supprime tout ce qui lui appartient (cascade) ;
+la suppression d'un asset remet à vide les références qui le visaient.
+
+## Conventions
+
+- Identifiants `cuid()`.
+- JSON seulement pour ce qui n'est pas interrogé (profil, dépouillement,
+  réglages) et toujours validé par un schéma Zod de `@regie/core`.
+- Les nombres de version (`version`) s'incrémentent à chaque modification
+  enregistrée ; l'instantané correspondant est dans `Revision`.

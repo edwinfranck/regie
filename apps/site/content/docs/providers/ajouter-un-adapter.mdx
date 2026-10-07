@@ -1,0 +1,80 @@
+---
+title: "Ajouter un adapter"
+description: "Écrire l'adapter d'un nouveau fournisseur — une cinquantaine de lignes le plus souvent."
+---
+
+Avant d'écrire du code, vérifiez que le service ne se branche pas déjà par
+[`openai-compatible` ou `custom-http`](/docs/providers/compatibles-openai). Un
+adapter se justifie pour un service asynchrone (soumission puis sondage), des
+fichiers en multipart, une authentification signée.
+
+## 1. Écrire l'adapter
+
+Créer `packages/providers/src/adapters/mon-provider.ts` :
+
+```ts title="packages/providers/src/adapters/mon-provider.ts"
+import type { ProviderAdapter } from '../types';
+import { http, need, poll, download } from '../http';
+
+export const monProvider: ProviderAdapter = {
+  meta: {
+    id: 'mon-provider',
+    label: 'Mon provider',
+    description: 'Ce qu’il sait faire, en une phrase.',
+    capabilities: ['IMAGE'],
+    needsApiKey: true,
+    presets: [
+      {
+        modelId: 'image-v1',
+        label: 'Image v1',
+        capability: 'IMAGE',
+        modes: ['text-to-image'],
+        pricing: { unit: 'image', usd: 0.03 },
+      },
+    ],
+  },
+  image: {
+    async generate(cfg, req, ctx) {
+      const key = need(cfg.apiKey, 'Clé API manquante.');
+      const job = await http(
+        'https://api.example.com/v1/images',
+        { method: 'POST', headers: { Authorization: `Bearer ${key}` }, body: JSON.stringify({ prompt: req.prompt }) },
+        ctx,
+      );
+      ctx.onExternalId?.(job.id);
+      const done = await poll(async () => {
+        const s = await http(`https://api.example.com/v1/images/${job.id}`, { headers: { Authorization: `Bearer ${key}` } }, ctx);
+        return s.status === 'done' ? { done: true, value: s } : { done: false, progress: s.progress };
+      }, ctx);
+      return { outputs: [await download(done.url, {}, ctx)], usage: { units: 1, unit: 'image' } };
+    },
+  },
+  async test(cfg) {
+    await http('https://api.example.com/v1/me', { headers: { Authorization: `Bearer ${cfg.apiKey}` } });
+    return { ok: true, message: 'Clé valide.' };
+  },
+};
+```
+
+## 2. L'inscrire
+
+Dans `packages/providers/src/registry.ts`.
+
+C'est tout : l'adapter apparaît dans le catalogue, ses modèles dans les
+sélecteurs, le routeur le prend en compte.
+
+## Les règles
+
+- traduire les erreurs avec `fromStatus` / `ProviderError` : le worker décide
+  du retry avec `retryable` (`rate_limit`, `timeout`, `network`, `upstream`,
+  `internal` sont réessayés ; `auth`, `quota`, `content_policy`,
+  `invalid_input`, `unsupported` ne le sont pas) ;
+- remonter la progression par `ctx.onProgress` et l'identifiant externe par
+  `ctx.onExternalId` ;
+- respecter `ctx.signal` (annulation) — `http()` et `poll()` le font ;
+- renvoyer les fichiers en `Buffer` : le stockage est l'affaire du studio ;
+- `test()` ne doit rien générer de facturable.
+
+Un adapter ne connaît pas la base : il reçoit une configuration déchiffrée et
+une requête, renvoie des fichiers et un usage. Ajoutez ses tests à côté des
+autres, dans `packages/providers`, et lancez `pnpm test`.

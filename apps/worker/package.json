@@ -1,0 +1,19 @@
+{
+  "name": "@regie/worker",
+  "private": true,
+  "version": "0.2.0",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --env-file=../../.env src/main.ts",
+    "start": "tsx src/main.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@regie/db": "workspace:*",
+    "@regie/jobs": "workspace:*",
+    "@regie/providers": "workspace:*",
+    "@regie/studio": "workspace:*",
+    "bullmq": "^5.58.0",
+    "tsx": "^4.20.0"
+  }
+}

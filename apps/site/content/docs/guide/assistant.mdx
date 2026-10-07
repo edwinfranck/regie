@@ -1,0 +1,55 @@
+---
+title: "Assistant"
+description: "L'assistant de production connaît tout le projet et propose des actions applicables d'un clic."
+---
+
+## Ce qu'il sait
+
+L'assistant reçoit, à chaque question, un résumé du projet : concept, monde,
+style, personnages (avec objectif, arc, et s'ils ont une feuille de
+référence), lieux, objets, structure, scènes et plans, et l'état du contrôle de
+continuité. Il répond donc sur **votre** film, pas sur un film en général.
+
+Il s'ouvre depuis la barre latérale du projet ou depuis la palette de commandes
+(<kbd>Ctrl</kbd> / <kbd>⌘</kbd> + <kbd>K</kbd>, puis **Demander à
+l'assistant**). La réponse arrive en streaming ; les conversations sont
+gardées par projet.
+
+## Ce qu'il propose
+
+Quand une réponse s'y prête, l'assistant joint des **actions applicables d'un
+clic** : ajouter des plans à une scène, ouvrir une page. Rien ne s'applique
+sans que vous cliquiez.
+
+Exemples de questions :
+
+- « Quelles scènes n'ont pas encore de plan ? »
+- « Propose trois plans pour la scène 4, sans mouvement de caméra. »
+- « Quels personnages n'ont pas de feuille de référence ? »
+- « Le rythme de l'acte 2 te semble-t-il tenir ? »
+
+## Les autres tâches d'écriture
+
+L'assistant n'est pas le seul à écrire. Chaque page a ses propositions
+ciblées, qui reçoivent le même résumé du projet :
+
+| Tâche | Où | Produit |
+|---|---|---|
+| `concept` | Concept | logline, synopsis, pitch, thèmes, personnages potentiels |
+| `character`, `location` | fiches | fiche complète, descriptions visuelles en anglais |
+| `beats` | Histoire | contenu des temps forts |
+| `script` | Scénario | continuer, réécrire, raccourcir, développer, dialogues, tension, humour, ton |
+| `coherence` | Scénario | incohérences avec la bible |
+| `breakdown`, `direction`, `shots` | Scène | dépouillement, mise en scène, découpage |
+| `continuity` | Continuité | problèmes au-delà du contrôle déterministe |
+| `enrich` | Génération | prompt libre décomposé et assemblé |
+
+Toutes demandent un modèle de texte. Sans lui, leurs boutons sont désactivés
+et le disent.
+
+<Callout>
+  La cible est un agent qui **agit** : créer le concept depuis la conversation,
+  écrire les fiches, découper une scène, lancer les générations — avec
+  confirmation avant toute action qui coûte ou supprime. Voir la
+  [feuille de route](/docs/feuille-de-route#cible-finale--lagent-de-production).
+</Callout>

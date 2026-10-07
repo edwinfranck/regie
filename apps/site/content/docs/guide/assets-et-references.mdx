@@ -1,0 +1,47 @@
+---
+title: "Assets et références"
+description: "Tous les fichiers du projet, ce qu'ils montrent, et ceux qui servent de référence."
+---
+
+## Les assets
+
+**Assets** rassemble tous les fichiers du projet : envoyés, générés,
+importés. Filtres : scène, plan, personnage, lieu, type, date, provider,
+modèle. Le détail d'un asset montre sa génération d'origine (prompt, modèle,
+coût), ses versions et ses liens.
+
+Les envois sont vérifiés : taille maximale (`UPLOAD_MAX_MB`), type contrôlé par
+la signature binaire du fichier, pas par son extension.
+
+## Les liens
+
+Chaque asset est rattaché aux personnages, lieux, objets, scènes et plans qu'il
+montre. C'est ce lien qui permet de retrouver « toutes les images de CH1 dans
+la scène 12 », et au [graphe du projet](/docs/guide/continuite#le-graphe-du-projet)
+de dire ce qui dépend de quoi.
+
+## Les références
+
+Une **référence** est un asset désigné comme l'image qui fait foi pour une
+entité : la feuille d'un personnage, la plaque d'un lieu, la planche des
+objets. Elle porte une nature (feuille, portrait, plaque…) et des étiquettes.
+
+Pour en définir une :
+
+- générer depuis la fiche avec **Référence et cohérence** ;
+- ou, sur n'importe quelle image, **Définir comme référence** de tel
+  personnage, lieu ou objet ;
+- ou envoyer une image existante.
+
+Ensuite, à chaque génération d'un plan, le Context Builder charge les
+références dans cet ordre :
+
+1. feuilles des personnages du plan ;
+2. échelle des tailles, s'il y a plusieurs personnages ;
+3. planche d'objets ;
+4. objets du plan ;
+5. plaque du lieu ;
+6. style.
+
+C'est le moteur de cohérence : le texte dit qui est là, l'image montre à quoi
+il ressemble.

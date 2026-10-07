@@ -1,0 +1,75 @@
+---
+title: "Introduction"
+description: "régie, studio de production audiovisuelle assisté par IA. Une bible, un découpage, N moteurs."
+icon: BookOpen
+---
+
+régie part d'une idée de film et arrive à un projet complet — concept, histoire,
+personnages, lieux, scénario, découpage, storyboard — puis à des images et des
+vidéos générées, montées et exportées, **sans que les personnages changent de
+visage d'un plan à l'autre**.
+
+## La règle qui justifie l'outil
+
+> Un modèle n'a aucune mémoire entre deux générations. Tout ce qui n'est ni
+> écrit ni montré en image sera réinventé, différemment à chaque fois.
+
+Donc une seule source de vérité — **la bible du projet** — et chaque prompt en
+est **compilé**, jamais écrit à la main. Les références de chaque personnage et
+de chaque lieu partent automatiquement avec chaque plan. Le compilateur de la
+v0.1 (bible YAML → prompts par moteur) est devenu le cœur du studio ; les
+projets v0.1 s'importent tels quels.
+
+## Principes
+
+<Cards>
+  <Card title="Aucune génération simulée">
+    Sans provider configuré, l'interface le dit et propose de le configurer.
+    Rien ne fait semblant.
+  </Card>
+  <Card title="Aucun fournisseur câblé">
+    Chaque fournisseur d'IA est un adapter derrière une interface commune ; on
+    en change sans toucher au reste.
+  </Card>
+  <Card title="Contrôler avant de brûler des crédits">
+    Le linter de bible et de continuité tourne en permanence et bloque les plans
+    sans référence.
+  </Card>
+</Cards>
+
+## Ce qu'il y a dedans
+
+| Étape | Ce que fait régie |
+|---|---|
+| [Concept](/docs/guide/concept) | idée → logline, synopsis, thèmes, enjeux, personnages proposés (IA), tout éditable |
+| [Histoire](/docs/guide/histoire) | 7 structures (3 actes, 5 actes, voyage du héros, Save the Cat, Story Circle, Kishōtenketsu, libre), temps forts reliés aux scènes |
+| [Bible](/docs/guide/bible) | personnages, lieux, objets et costumes, monde, styles de rendu, états de lumière |
+| [Scénario](/docs/guide/scenario) | éditeur au format cinéma (Fountain), assistance IA sur sélection, versions, exports |
+| [Scènes](/docs/guide/scenes-et-decoupage) | story map, dépouillement, mise en scène, découpage en plans avec la bibliothèque caméra |
+| [Prompts](/docs/prompts) | compilés depuis la bible pour chaque cible (image fixe, Veo, Kling, Wan/ComfyUI, Runway, planche), visibles et réécrivables |
+| [Génération](/docs/guide/generation) | image, vidéo, audio ; file de jobs, progression en temps réel, coût, relance, changement de modèle |
+| [Cohérence](/docs/guide/continuite) | références chargées automatiquement dans chaque plan ; contrôle de continuité ; analyse IA |
+| [Montage](/docs/guide/montage) | espace plein écran : pistes, chutier, coupe, fondus, rendu MP4/MOV |
+| [Production](/docs/guide/assistant) | assets, storyboard, tableau de production, assistant qui connaît tout le projet, coûts |
+
+## Par où commencer
+
+<Cards>
+  <Card title="Démarrage rapide" href="/docs/demarrage-rapide">
+    Installer régie en local, brancher un premier provider, ouvrir le projet de
+    démonstration.
+  </Card>
+  <Card title="Guide d'utilisation" href="/docs/guide">
+    Le parcours complet, de l'idée à l'export, une page par étape.
+  </Card>
+  <Card title="Providers" href="/docs/providers">
+    Brancher OpenAI, Google, fal, un service compatible OpenAI ou vos modèles
+    locaux.
+  </Card>
+  <Card title="Architecture" href="/docs/architecture">
+    Les moteurs, les paquets, le chemin d'une génération.
+  </Card>
+</Cards>
+
+régie est un logiciel libre sous licence MIT. Le code est sur
+[GitHub](https://github.com/edwinfranck/regie).

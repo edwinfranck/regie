@@ -1,0 +1,57 @@
+---
+title: "ComfyUI"
+description: "Vos workflows ComfyUI deviennent des modèles régie — génération, upscale, inpainting, vidéo Wan ou LTX."
+---
+
+Adapter `comfyui`, pour l'image et la vidéo, en local ou sur votre propre
+serveur GPU.
+
+## Brancher l'instance
+
+Dans **Réglages → Providers IA → Ajouter → ComfyUI** : l'URL de l'instance (par
+défaut `http://127.0.0.1:8188`) et, dans le champ **Workflows**, un objet JSON.
+
+## Déclarer les workflows
+
+Une clé par workflow, chacun exporté depuis ComfyUI avec **Save (API)** :
+
+```json
+{
+  "flux-portrait": {
+    "label": "Portrait Flux",
+    "capability": "IMAGE",
+    "graph": {
+      "6": { "class_type": "CLIPTextEncode", "inputs": { "text": "{{prompt}}", "clip": ["4", 1] } },
+      "…": {}
+    }
+  }
+}
+```
+
+Dans le graphe, remplacez les valeurs à piloter par des variables. Elles sont
+remplacées à l'envoi :
+
+| Variable | Valeur |
+|---|---|
+| `{{prompt}}`, `{{negative}}` | prompt compilé et négatif |
+| `{{seed}}` | graine |
+| `{{width}}`, `{{height}}` | dimensions |
+| `{{steps}}`, `{{cfg}}` | réglages d'échantillonnage |
+| `{{image}}` | première image ou référence, envoyée par `/upload/image` |
+| `{{image_last}}` | dernière image (vidéo bornée) |
+| `{{frames}}` | nombre d'images (vidéo) |
+
+Une variable seule dans une chaîne (`"{{seed}}"`) devient un nombre.
+
+## Découvrir les modèles
+
+**Découvrir les modèles** transforme chaque workflow en modèle : génération,
+upscale, inpainting, cohérence de visage, transfert de style, vidéo Wan ou LTX
+— tout ce que le graphe sait faire. Ils apparaissent dans les sélecteurs et le
+routeur les prend en compte comme les autres.
+
+La cible de compilation naturelle de ComfyUI est **technique** (`wan`) : des
+champs structurés `camera: … subject: …` et un négatif séparé, que l'on mappe
+facilement sur les nœuds d'un graphe. Voir [Prompts](/docs/prompts#3-les-cibles).
+
+`SEED_COMFYUI_URL` dans `.env` crée le provider au seed.

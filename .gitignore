@@ -1,2 +1,17 @@
 node_modules/
+.next/
 out/
+dist/
+coverage/
+.env
+.env.local
+*.tsbuildinfo
+packages/db/src/generated/
+apps/web/test-results/
+apps/web/playwright-report/
+.data/
+
+# Fichiers personnels, non publiés
+maquette/
+CLAUDE.md
+.claude/

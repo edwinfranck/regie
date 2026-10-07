@@ -1,0 +1,12 @@
+{
+  "name": "@regie/storage",
+  "private": true,
+  "version": "0.2.0",
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "typecheck": "tsc --noEmit" },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.890.0",
+    "@aws-sdk/s3-request-presigner": "^3.890.0"
+  }
+}

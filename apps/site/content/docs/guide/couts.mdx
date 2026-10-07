@@ -1,0 +1,35 @@
+---
+title: "Coûts"
+description: "Ce que coûtent les générations, estimé avant, mesuré après."
+---
+
+## Avant
+
+Chaque modèle déclare un **prix** dans **Réglages → Providers IA** : par
+image, par seconde de vidéo, par millier de tokens, par millier de caractères
+ou par appel. L'estimation s'affiche avant de générer.
+
+<Callout type="warn">
+  Les prix proposés à l'ajout d'un provider sont un point de départ. Vérifiez-les
+  chez le fournisseur : ils changent.
+</Callout>
+
+## Après
+
+Chaque appel facturable écrit une ligne d'usage : provider, modèle, capacité,
+tokens ou unités, coût. Le coût vient du provider quand il le renvoie, sinon
+du tarif déclaré sur le modèle. Les tâches de texte (assistant, concept,
+réécriture) sont tracées comme les images et les vidéos.
+
+**Réglages → Coûts et usage** agrège par jour, mois, projet, scène, provider,
+modèle et capacité. Le tableau de bord affiche le coût du mois.
+
+## Dépenser moins
+
+- le [contrôle de continuité](/docs/guide/continuite) bloque les plans sans
+  référence avant qu'ils ne partent ;
+- une **planche** de storyboard dessine plusieurs cases en une génération ;
+- le routeur en mode AUTO peut privilégier le coût plutôt que la qualité ;
+- les erreurs définitives (clé refusée, contenu refusé) ne sont jamais
+  réessayées ;
+- un modèle local (Ollama, ComfyUI) ne coûte rien.

@@ -1,0 +1,94 @@
+---
+title: "Bible"
+description: "Personnages, lieux, objets et costumes, styles, lumières — la seule source de vérité du film."
+---
+
+Tout ce qui part dans un prompt vit dans la bible, dans des champs dédiés. Le
+compilateur ne lit rien d'autre : ce qui n'y est pas écrit sera réinventé par
+le modèle, différemment à chaque plan.
+
+## Les codes
+
+Chaque entité a un **code** court et unique dans le projet — `CH1` pour un
+personnage, `L2` pour un lieu, `P3` pour un objet — repris tel quel dans les
+prompts. Un modèle à références multiples associe ainsi le texte et l'image
+qui le montre.
+
+## Personnages
+
+La fiche se lit en deux parties.
+
+**Ce que voit la caméra** (lu par le compilateur, en anglais) :
+
+| Champ | Contenu |
+|---|---|
+| Description gelée (`block`) | l'apparence complète, figée : âge, visage, cheveux, corpulence |
+| Description courte (`short`) | une phrase, pour les cibles concises |
+| Costume | ce qu'il porte, toujours |
+| Silhouette | ce qui le distingue de loin, quand le cadre est large |
+| Interdits (`never`) | ce qui ne doit jamais apparaître (« long hair », « glasses ») |
+| Taille | en mètres, pour l'échelle des tailles |
+| Référence | la feuille de personnage, chargée dans chaque plan où il apparaît |
+
+**Le profil narratif** (lu par les tâches d'écriture) : rôle, âge, origine,
+personnalité, histoire, motivation, peur, désir, objectif, conflit, arc
+narratif, relations, langage, comportement, évolution. **Gelé** signale qu'un personnage est validé :
+le contrôle de continuité exige alors une référence.
+
+### Générer les références
+
+Depuis la fiche, le panneau **Référence et cohérence** compile les prompts de
+référence — les seuls générés **sans** image en entrée, puisqu'ils fabriquent
+les images en entrée des autres :
+
+- feuille de personnage (face, trois-quarts, dos) ;
+- portrait, expressions, poses, tête sous plusieurs angles ;
+- costume seul.
+
+Générer la feuille en la désignant comme référence en fait la référence du
+personnage. Elle part ensuite avec chaque plan où il apparaît.
+
+## Lieux
+
+Description gelée, description courte, interdits, intérieur ou extérieur,
+**son d'ambiance** (repris dans les prompts vidéo), et une **plaque de
+référence**. Variantes à générer : plaque d'ensemble, intérieur, extérieur,
+nuit, pluie.
+
+## Objets et costumes
+
+Accessoires, costumes, véhicules, animaux, décors, effets : tout ce qui doit
+rester identique d'un plan à l'autre. Mêmes champs (description gelée, courte,
+interdits, référence). La **planche d'objets** les dessine tous à une échelle
+commune.
+
+## Styles de rendu
+
+Un style décrit le rendu (`LOOK: …`) et ses interdits — « photorealistic » pour
+un film d'animation, par exemple. Un seul est actif à la fois ; il s'applique à
+tous les plans.
+
+## États de lumière
+
+Jour, nuit, aube, intérieur bougie… Chaque état a sa description et ses
+interdits ; l'un est la lumière **par défaut**. Une scène choisit sa lumière,
+un plan peut la remplacer. Ils se gèrent dans **Réglages du projet**.
+
+## Règles du projet
+
+Dans **Réglages du projet** :
+
+- **blocs** injectés dans tous les prompts ;
+- **nombre maximal de personnages par plan** ;
+- paires **jamais ensemble** (deux personnages trop ressemblants, qu'il vaut
+  mieux ne pas cadrer côte à côte) ;
+- **mouvement** : durée des clips, mouvements de caméra autorisés, interdits
+  vidéo ;
+- format (ratio, résolution, images par seconde).
+
+Le contrôle de continuité fait respecter ces règles à chaque plan.
+
+## Historique
+
+Chaque fiche est versionnée : **Versions** montre qui a changé quoi, quand, et
+restaure une version antérieure.

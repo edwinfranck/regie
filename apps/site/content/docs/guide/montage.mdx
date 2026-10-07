@@ -1,0 +1,59 @@
+---
+title: "Montage"
+description: "Un espace plein écran pour monter le film là où il a été écrit."
+---
+
+Le montage est un espace à part, plein écran, avec ses propres menus : on y
+entre depuis le projet (**Montage**) et on quitte la navigation habituelle.
+
+## L'espace
+
+- **Séquences** : un projet peut en avoir plusieurs (montage principal,
+  bande-annonce, version courte) ;
+- **chutier** : les assets du projet, à glisser dans la timeline ;
+- **moniteur** : la lecture de la séquence ;
+- **timeline** : pistes vidéo, audio, dialogue, musique, effets, sous-titres ;
+- **inspecteur** : les propriétés du clip sélectionné (entrée, sortie, fondus,
+  volume).
+
+## Assembler depuis le découpage
+
+À la création d'une séquence, **Assembler depuis le découpage** pose un clip
+par plan sur la piste V1, dans l'ordre du film (la vidéo du plan, sinon son
+image), et les dialogues en sous-titres. Un plan sans média laisse un trou de
+sa durée, à combler plus tard. Une séquence existante se **réassemble** depuis
+le découpage quand celui-ci a changé.
+
+## Monter
+
+Couper, rogner, scinder, déplacer, dupliquer, fondus, magnétisme. Tout s'annule
+et se rétablit ; l'enregistrement est automatique.
+
+| Raccourci | Action |
+|---|---|
+| <kbd>Espace</kbd> | lecture / pause |
+| <kbd>J</kbd> <kbd>K</kbd> <kbd>L</kbd> | arrière, arrêt, avant |
+| <kbd>←</kbd> <kbd>→</kbd> | image précédente / suivante (<kbd>Maj</kbd> : une seconde) |
+| <kbd>↑</kbd> <kbd>↓</kbd> | point de montage précédent / suivant |
+| <kbd>Début</kbd> <kbd>Fin</kbd> | début / fin de la séquence |
+| <kbd>S</kbd> ou <kbd>Ctrl</kbd> <kbd>K</kbd> | scinder au curseur |
+| <kbd>N</kbd> | magnétisme |
+| <kbd>Suppr</kbd> | supprimer la sélection |
+| <kbd>Ctrl</kbd> <kbd>D</kbd> | dupliquer |
+| <kbd>Ctrl</kbd> <kbd>A</kbd> | tout sélectionner |
+| <kbd>Ctrl</kbd> <kbd>Z</kbd> / <kbd>Ctrl</kbd> <kbd>Maj</kbd> <kbd>Z</kbd> | annuler / rétablir |
+| <kbd>Maj</kbd> <kbd>Z</kbd> | ajuster la timeline à la fenêtre |
+| <kbd>Ctrl</kbd> <kbd>S</kbd> | enregistrer |
+| <kbd>Échap</kbd> | désélectionner |
+
+Sur macOS, <kbd>⌘</kbd> remplace <kbd>Ctrl</kbd>.
+
+## Rendre
+
+**Rendre la vidéo** envoie la séquence au worker, qui la monte avec FFmpeg : MP4 ou MOV,
+qualité brouillon (rapide, fichier léger), standard (diffusion) ou haute
+(archive, plus lent), sous-titres incrustés au besoin. Le fichier rejoint les
+assets et se télécharge à la fin du rendu.
+
+La séquence s'exporte aussi en **SRT** (sous-titres) et en **EDL** (liste de
+montage, pour reprendre dans un autre logiciel).

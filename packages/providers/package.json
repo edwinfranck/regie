@@ -1,0 +1,11 @@
+{
+  "name": "@regie/providers",
+  "private": true,
+  "version": "0.2.0",
+  "type": "module",
+  "exports": { ".": "./src/index.ts" },
+  "scripts": { "typecheck": "tsc --noEmit" },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.128.0"
+  }
+}

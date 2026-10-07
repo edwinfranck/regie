@@ -1,0 +1,47 @@
+---
+title: "Modèles locaux"
+description: "Ollama, LM Studio, vLLM, llama.cpp — rien ne sort de la machine, le coût est nul."
+---
+
+régie ne suppose pas le cloud. Un modèle local se branche comme n'importe quel
+provider et passe par le même routeur.
+
+## Ollama
+
+Adapter `ollama`, pour le texte (assistant, concept, fiches, découpage).
+
+1. installez [Ollama](https://ollama.com) et un modèle : `ollama pull qwen3`
+   par exemple ;
+2. dans **Réglages → Providers IA → Ajouter → Ollama**, URL
+   `http://localhost:11434` ;
+3. **Découvrir les modèles** liste ceux qui sont installés.
+
+Coût nul, rien ne sort de la machine. Pour l'installation en conteneurs, l'URL
+est celle de l'hôte vue depuis le conteneur (`http://host.docker.internal:11434`
+sous Docker Desktop).
+
+`SEED_OLLAMA_URL` dans `.env` crée le provider au seed.
+
+## LM Studio, vLLM, llama.cpp
+
+Ils exposent une API compatible OpenAI : adapter `openai-compatible`, sans clé.
+
+| Serveur | URL de base |
+|---|---|
+| LM Studio | `http://localhost:1234/v1` |
+| vLLM | `http://localhost:8000/v1` |
+| llama.cpp server | `http://localhost:8080/v1` |
+
+Voir [Services compatibles OpenAI](/docs/providers/compatibles-openai).
+
+## Images et vidéos en local
+
+C'est le rôle de [ComfyUI](/docs/providers/comfyui) : tout ce que vos workflows
+savent faire devient un modèle.
+
+## Mélanger local et cloud
+
+Rien n'oblige à choisir : un modèle de texte local pour l'écriture, un modèle
+d'image dans le cloud pour les références, par exemple. Le
+[routage](/docs/providers#routage) déclare l'ordre de préférence par tâche, et
+la préférence **coût** du mode AUTO favorise naturellement les modèles locaux.

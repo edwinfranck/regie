@@ -1,0 +1,81 @@
+---
+title: "Contribuer"
+description: "Signaler un problème, proposer une modification, ajouter un adapter."
+icon: GitPullRequest
+---
+
+régie est un logiciel libre sous licence MIT. Les règles de contribution
+complètes sont dans
+[CONTRIBUTING.md](https://github.com/edwinfranck/regie/blob/main/CONTRIBUTING.md) ;
+cette page en donne l'essentiel.
+
+## Signaler un problème
+
+Ouvrez une [issue](https://github.com/edwinfranck/regie/issues) avec : ce que
+vous faisiez, ce que vous attendiez, ce qui s'est passé, et pour une erreur de
+génération le provider, le modèle et le message affiché (jamais votre clé).
+
+## Proposer une modification
+
+<Steps>
+<Step>
+
+### Installer
+
+Suivez le [démarrage rapide](/docs/demarrage-rapide).
+
+</Step>
+<Step>
+
+### Développer
+
+Une branche par sujet. Lisez le code voisin et imitez-le : nommage, densité
+des commentaires, gestion d'erreurs. L'interface est en français, le code et
+les identifiants en anglais.
+
+</Step>
+<Step>
+
+### Vérifier
+
+```sh
+pnpm typecheck
+pnpm test
+pnpm test:integration   # si vous touchez au pipeline (services lancés)
+```
+
+</Step>
+<Step>
+
+### Ouvrir la pull request
+
+Messages au format Conventional Commits (`feat(core): …`, `fix(web): …`).
+Décrivez ce qui change et comment vous l'avez vérifié.
+
+</Step>
+</Steps>
+
+## Les principes à respecter
+
+- **Aucune génération simulée.** Pas de mock silencieux, pas de donnée fictive
+  présentée comme réelle. Ce qui n'existe pas encore est annoncé comme tel.
+- **Aucun fournisseur câblé.** Tout appel de génération passe par l'interface
+  commune des adapters de `packages/providers`.
+- **Contrôler avant de brûler des crédits.** Le linter bloque les plans sans
+  référence ; ne le contournez pas.
+- **Le compilateur reste déterministe.** L'IA propose, le compilateur
+  assemble.
+- **`core` ne dépend de rien.** Pas d'I/O dans `packages/core` : il se teste
+  sans base et s'importe côté navigateur.
+
+## Où contribuer
+
+| Envie | Où regarder |
+|---|---|
+| Un nouveau fournisseur | [Ajouter un adapter](/docs/providers/ajouter-un-adapter), ou une ligne dans `meta.endpoints` pour un service compatible OpenAI |
+| Une nouvelle grammaire de moteur | `packages/core/src/targets/` — voir [Prompts](/docs/prompts) |
+| Une règle de continuité | `packages/core/src/lint.ts` et ses tests |
+| L'interface | `apps/web` (Next.js, Tailwind, shadcn/ui) |
+| Cette documentation | `apps/site/content/docs` — lien **Modifier sur GitHub** en bas de chaque page |
+
+Les chantiers ouverts sont dans la [feuille de route](/docs/feuille-de-route).

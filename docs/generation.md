@@ -1,0 +1,94 @@
+# Génération
+
+## Cycle de vie
+
+```
+QUEUED ──▶ PROCESSING ──▶ COMPLETED
+   ▲            │
+   └── retry ───┤
+                ├──▶ FAILED
+                └──▶ CANCELED
+```
+
+1. **Demande** — `POST /api/projects/:id/generations` avec un
+   `generationRequestSchema` : capacité, mode, modèle (`auto` ou id), prompt
+   (déjà compilé et éventuellement retouché), négatif, entrées (assets et
+   rôle : `reference`, `first_frame`, `last_frame`, `init`), rattachements
+   (personnages, lieu, scène, et `setAsRefOf` pour faire du résultat la
+   référence d'une entité), paramètres.
+2. **Création** (`studio.createGeneration`) — droits, routage, contrôle des
+   entrées (elles doivent appartenir au projet), ligne `Generation` QUEUED,
+   job BullMQ dont l'id est celui de la génération (pas de doublon possible),
+   événement `generation.queued`.
+3. **Exécution** (`apps/worker` → `studio.runGeneration`) — chargement des
+   entrées depuis S3 (URLs publiques pour les adapters qui l'exigent), appel
+   de l'adapter, progression relayée (au plus un événement par seconde),
+   sorties écrites dans S3, un `Asset` par fichier avec ses `AssetLink`,
+   référence posée si demandé, `Usage` et coût, événement
+   `generation.completed`.
+4. **Erreur** — l'adapter lève une `ProviderError` au code stable. Les codes
+   `rate_limit`, `timeout`, `network`, `upstream`, `internal` sont réessayés
+   (3 tentatives, backoff exponentiel à partir de 10 s) ; `auth`, `quota`,
+   `content_policy`, `invalid_input`, `unsupported` ne le sont pas (inutile de
+   payer trois fois un refus). Chaque tentative est une `GenerationJob`.
+
+## Worker
+
+```sh
+pnpm dev:worker                      # développement
+pnpm --filter @regie/worker start    # production
+```
+
+`WORKER_CONCURRENCY` (4 par défaut) générations en parallèle par processus ;
+on lance autant de processus que voulu, BullMQ ne donne un job qu'à un seul.
+Arrêt propre sur SIGTERM (les générations en cours sont annulées et
+repartiront). Une génération restée PROCESSING après un crash est reprise par
+le mécanisme de jobs « stalled » de BullMQ.
+
+`REGIE_QUEUE` change le nom de la file (les tests d'intégration utilisent une
+file à part pour ne pas être servis par le worker de développement).
+
+## Annuler, relancer, changer de modèle
+
+- `DELETE /generations/:id` : retire le job s'il attend, sinon publie
+  `regie:cancel` ; le worker interrompt l'appel en cours (AbortSignal).
+- `POST /generations/:id` sans corps : remet la même génération en file.
+- `POST /generations/:id {modelId}` : nouvelle génération identique sur un
+  autre modèle (« Change provider » du cahier des charges).
+
+## Temps réel
+
+Le worker publie dans Redis (`regie:events:<projectId>`) ; `GET /api/events`
+relaie en Server-Sent Events les projets accessibles à l'utilisateur.
+L'interface n'ouvre qu'une connexion par onglet et met à jour le cache
+TanStack Query : progression en place, invalidation des assets à la fin,
+notification en cas d'échec définitif.
+
+Événements : `generation.queued` (avec position), `generation.progress`,
+`generation.completed` (ids des assets), `generation.failed` (message,
+code, `willRetry`), `project.updated` (une référence a changé).
+
+## Coûts
+
+Chaque appel facturable écrit une ligne `Usage` : provider, modèle, capacité,
+tokens ou unités, coût. Le coût vient du provider quand il le renvoie, sinon
+de `estimateCost(pricing, usage)` avec le tarif du modèle (par image, par
+seconde, par millier de tokens, par millier de caractères ou par appel).
+**Réglages → Coûts et usage** agrège par jour, mois, projet, provider,
+modèle, capacité et scène.
+
+## Messages d'erreur
+
+L'interface n'affiche jamais une erreur brute seule. Une génération échouée
+montre le provider, le modèle, le message traduit (« Clé API refusée par le
+provider. », « Contenu refusé par la politique du provider. »…), et propose
+**Réessayer** et **Changer de modèle**. Une erreur de stockage est
+explicitement signalée comme interne, pour ne pas accuser le provider à tort.
+
+## Texte
+
+Les tâches de texte (assistant, concept, fiches, découpage, réécriture,
+continuité) sont synchrones et streamées (`studio.runText` / `streamText`) :
+un utilisateur attend la réponse, la file n'apporterait que de la latence.
+Elles sont routées (tâche `TEXT`), limitées en débit, et tracées comme les
+autres (`Generation` COMPLETED + `Usage`).

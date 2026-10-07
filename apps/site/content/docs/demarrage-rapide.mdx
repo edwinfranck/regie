@@ -1,0 +1,149 @@
+---
+title: "Démarrage rapide"
+description: "Installer régie en local, préparer la base, brancher un premier provider."
+icon: Rocket
+---
+
+## Prérequis
+
+- **Node 20.11+** et **pnpm 10** (`corepack enable` suffit en général) ;
+- **Docker**, pour PostgreSQL, Redis et MinIO ;
+- au moins une clé chez un fournisseur d'IA, ou un modèle local (Ollama,
+  ComfyUI). Sans elle, régie s'installe et se parcourt, mais ne génère rien —
+  et le dit.
+
+Les services ont des limites mémoire (`mem_limit`) dans `docker-compose.yml` :
+l'ensemble tient sur une machine de 16 Go.
+
+## Installation
+
+<Steps>
+<Step>
+
+### Récupérer le code
+
+```sh
+git clone https://github.com/edwinfranck/regie
+cd regie
+pnpm install
+```
+
+</Step>
+<Step>
+
+### Configurer l'environnement
+
+```sh
+cp .env.example .env
+# générer les deux secrets
+sed -i "s|^AUTH_SECRET=.*|AUTH_SECRET=$(openssl rand -base64 32)|" .env
+sed -i "s|^ENCRYPTION_KEY=.*|ENCRYPTION_KEY=$(openssl rand -base64 32)|" .env
+```
+
+Toutes les variables sont décrites dans `.env.example`. Les indispensables :
+
+| Variable | Rôle |
+|---|---|
+| `APP_URL` | adresse publique de l'application (`http://localhost:3000` en local) |
+| `AUTH_SECRET` | signe les sessions |
+| `ENCRYPTION_KEY` | chiffre les clés des providers en base (AES-256-GCM, 32 octets en base64) |
+| `DATABASE_URL` | PostgreSQL |
+| `REDIS_URL` | Redis, pour la file de jobs et le temps réel |
+| `S3_*` | stockage des fichiers (MinIO en local, ou S3, R2, Supabase) |
+
+<Callout type="warn">
+  Les clés des providers IA ne vont **pas** dans l'environnement : elles se
+  saisissent dans l'interface et sont chiffrées en base. Les variables `SEED_*`
+  servent seulement à pré-remplir les providers au premier seed.
+</Callout>
+
+</Step>
+<Step>
+
+### Lancer les services
+
+```sh
+pnpm services        # Postgres, Redis, MinIO (docker compose)
+```
+
+Pour les arrêter : `docker compose down`.
+
+</Step>
+<Step>
+
+### Préparer la base
+
+```sh
+pnpm db:deploy       # applique les migrations
+pnpm db:seed         # templates de prompts ; providers si des SEED_* sont posés
+```
+
+</Step>
+<Step>
+
+### Démarrer
+
+```sh
+pnpm dev             # web sur http://localhost:3000 + worker de génération
+```
+
+Ouvrez [localhost:3000](http://localhost:3000) et créez un compte : **le premier
+compte créé devient administrateur** de l'instance. `ADMIN_EMAILS` en désigne
+d'autres.
+
+</Step>
+</Steps>
+
+## Le projet de démonstration
+
+```sh
+pnpm db:seed:demo
+```
+
+Crée un projet complet — concept, bible, scénario, scènes et plans — pour
+parcourir toutes les étapes sans rien écrire. Les images et vidéos n'y sont
+pas inventées : elles se génèrent depuis le projet, une fois un provider
+branché.
+
+## Brancher un premier provider
+
+Dans **Réglages → Providers IA → Ajouter** :
+
+1. un **modèle de texte**, pour l'assistant, le concept, les fiches et le
+   découpage (OpenAI, Anthropic, Google, Ollama en local…) ;
+2. un **modèle d'image**, pour les feuilles de personnages, les plaques de lieux
+   et les cases du storyboard (OpenAI, Google, fal, Replicate, ComfyUI…).
+
+Collez la clé, puis **Tester la connexion** : la clé est vérifiée sans rien
+générer de facturable. Le détail de chaque fournisseur est dans
+[Providers](/docs/providers).
+
+## Tout en conteneurs
+
+Application comprise :
+
+```sh
+docker compose --profile app up --build
+```
+
+Le worker applique les migrations au démarrage. Voir
+[Déploiement](/docs/deploiement) pour une installation sur serveur.
+
+## Commandes utiles
+
+| Commande | Effet |
+|---|---|
+| `pnpm dev` | web + worker en développement |
+| `pnpm test` | tests unitaires (core, providers) |
+| `pnpm test:integration` | pipeline complet contre Postgres, Redis et S3 locaux |
+| `pnpm test:e2e` | parcours navigateur (Playwright) contre le serveur lancé |
+| `pnpm typecheck` | TypeScript sur tout le monorepo |
+| `pnpm db:migrate` | nouvelle migration après modification du schéma |
+| `pnpm db:studio` | Prisma Studio |
+
+## Ensuite
+
+<Cards>
+  <Card title="Guide d'utilisation" href="/docs/guide" />
+  <Card title="Providers" href="/docs/providers" />
+</Cards>

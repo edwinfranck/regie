@@ -1,0 +1,4 @@
+{
+  "title": "Providers",
+  "pages": ["index", "compatibles-openai", "local", "comfyui", "ajouter-un-adapter"]
+}

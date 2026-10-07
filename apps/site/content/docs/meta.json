@@ -1,0 +1,20 @@
+{
+  "title": "Documentation",
+  "pages": [
+    "index",
+    "demarrage-rapide",
+    "---Guide d'utilisation---",
+    "...guide",
+    "---Providers---",
+    "...providers",
+    "---Technique---",
+    "architecture",
+    "base-de-donnees",
+    "generation",
+    "prompts",
+    "deploiement",
+    "---Projet---",
+    "contribuer",
+    "feuille-de-route"
+  ]
+}

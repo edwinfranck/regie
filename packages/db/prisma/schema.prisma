@@ -1,0 +1,1105 @@
+// régie — schéma de données.
+//
+// Trois familles :
+//   1. Identité et collaboration : User, Workspace, membres, rôles, audit.
+//   2. Le film : Project et sa bible (Character, Location, Prop, Style,
+//      LightState, World), sa narration (Story, Act, Sequence, Scene, Script)
+//      et son découpage (Shot, Storyboard).
+//   3. La fabrication : Provider, Model, Route, Generation, GenerationJob,
+//      Asset, Usage, Timeline.
+//
+// Règle d'or héritée de régie v0.1 : la bible est la seule source de vérité.
+// Tout ce qui sert au compilateur de prompts vit dans des colonnes typées ;
+// le reste (profil narratif, notes) vit dans des Json validés par Zod dans
+// @regie/core.
+
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ───────────────────────────── Identité ─────────────────────────────
+
+model User {
+  id             String    @id @default(cuid())
+  email          String    @unique
+  name           String?
+  image          String?
+  passwordHash   String?
+  emailVerified  DateTime?
+  isAdmin        Boolean   @default(false)
+  disabled       Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  accounts       Account[]
+  sessions       Session[]
+  memberships    WorkspaceMember[]
+  projectRoles   ProjectMember[]
+  ownedProjects  Project[]          @relation("ProjectOwner")
+  comments       Comment[]
+  notifications  Notification[]
+  generations    Generation[]
+  revisions      Revision[]
+  apiKeys        ApiKey[]
+  auditLogs      AuditLog[]
+  assistantThreads AssistantThread[]
+  favorites      ProjectFavorite[]
+  assets         Asset[]
+  providers      Provider[]
+}
+
+// Tables Auth.js (OAuth, sessions base de données, magic link).
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// Jetons d'accès personnels à l'API de régie (pas les clés des providers IA,
+// qui vivent chiffrées sur Provider).
+model ApiKey {
+  id         String    @id @default(cuid())
+  userId     String
+  name       String
+  prefix     String
+  hash       String    @unique
+  lastUsedAt DateTime?
+  expiresAt  DateTime?
+  createdAt  DateTime  @default(now())
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─────────────────────────── Collaboration ───────────────────────────
+
+enum Role {
+  OWNER
+  ADMIN
+  DIRECTOR
+  WRITER
+  ART_DIRECTOR
+  EDITOR
+  VIEWER
+}
+
+model Workspace {
+  id        String            @id @default(cuid())
+  name      String
+  slug      String            @unique
+  createdAt DateTime          @default(now())
+  members   WorkspaceMember[]
+  projects  Project[]
+  providers Provider[]
+}
+
+model WorkspaceMember {
+  id          String    @id @default(cuid())
+  workspaceId String
+  userId      String
+  role        Role      @default(VIEWER)
+  createdAt   DateTime  @default(now())
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, userId])
+}
+
+model ProjectMember {
+  id        String   @id @default(cuid())
+  projectId String
+  userId    String
+  role      Role     @default(VIEWER)
+  createdAt DateTime @default(now())
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+}
+
+model ProjectFavorite {
+  userId    String
+  projectId String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@id([userId, projectId])
+}
+
+model Comment {
+  id         String    @id @default(cuid())
+  projectId  String
+  authorId   String
+  entityType String
+  entityId   String
+  body       String
+  mentions   String[]
+  parentId   String?
+  resolvedAt DateTime?
+  createdAt  DateTime  @default(now())
+  project    Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  author     User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  parent     Comment?  @relation("Thread", fields: [parentId], references: [id], onDelete: Cascade)
+  replies    Comment[] @relation("Thread")
+
+  @@index([projectId, entityType, entityId])
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  kind      String
+  title     String
+  body      String?
+  href      String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  action     String
+  entityType String?
+  entityId   String?
+  meta       Json?
+  ip         String?
+  createdAt  DateTime @default(now())
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
+
+// Historique générique : un instantané JSON par modification, pour toute
+// entité versionnée (Character, Location, Prop, World, Script, Scene, Shot,
+// Style, Concept…). Remplace CharacterVersion, LocationVersion, ScriptVersion
+// et AssetVersion par une seule table : comparer et restaurer marchent de la
+// même façon partout.
+model Revision {
+  id         String   @id @default(cuid())
+  projectId  String
+  entityType String
+  entityId   String
+  version    Int
+  data       Json
+  message    String?
+  authorId   String?
+  createdAt  DateTime @default(now())
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  author     User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
+  @@unique([entityType, entityId, version])
+  @@index([projectId, createdAt])
+}
+
+// ───────────────────────────── Le projet ─────────────────────────────
+
+enum ProjectKind {
+  FEATURE
+  SHORT
+  SERIES
+  EPISODE
+  COMMERCIAL
+  MUSIC_VIDEO
+  ANIMATION
+  ANIME
+  DOCUMENTARY
+  EXPERIMENTAL
+  VERTICAL
+  SOCIAL
+}
+
+enum ProjectStage {
+  IDEA
+  DEVELOPMENT
+  PRE_PRODUCTION
+  PRODUCTION
+  POST_PRODUCTION
+  COMPLETED
+}
+
+model Project {
+  id          String       @id @default(cuid())
+  workspaceId String
+  ownerId     String
+  title       String
+  slug        String
+  kind        ProjectKind  @default(SHORT)
+  stage       ProjectStage @default(IDEA)
+  // Format de sortie : "16:9", "9:16", "2.39:1"…
+  aspectRatio String       @default("16:9")
+  resolution  String       @default("1920x1080")
+  fps         Int          @default(24)
+  language    String       @default("fr")
+  // Règles que le linter fait respecter au découpage (voir ProjectRules dans @regie/core).
+  rules       Json         @default("{}")
+  // Ce qu'un plan animé a le droit de faire (voir MotionRules).
+  motion      Json         @default("{}")
+  settings    Json         @default("{}")
+  coverAssetId String?     @unique
+  archivedAt  DateTime?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  workspace   Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  owner       User         @relation("ProjectOwner", fields: [ownerId], references: [id])
+  cover       Asset?       @relation("ProjectCover", fields: [coverAssetId], references: [id], onDelete: SetNull)
+  members     ProjectMember[]
+  favorites   ProjectFavorite[]
+  concept     Concept?
+  story       Story?
+  world       World?
+  script      Script?
+  characters  Character[]
+  locations   Location[]
+  props       Prop[]
+  styles      Style[]
+  lights      LightState[]
+  acts        Act[]
+  sequences   Sequence[]
+  scenes      Scene[]
+  shots       Shot[]
+  storyboards Storyboard[]
+  assets      Asset[]      @relation("ProjectAssets")
+  generations Generation[]
+  prompts     Prompt[]
+  templates   PromptTemplate[]
+  timelines   Timeline[]
+  comments    Comment[]
+  revisions   Revision[]
+  usage       Usage[]
+  assistantThreads AssistantThread[]
+
+  @@unique([workspaceId, slug])
+  @@index([ownerId])
+}
+
+// Phase 1 : l'idée transformée en concept. Un par projet.
+model Concept {
+  id            String   @id @default(cuid())
+  projectId     String   @unique
+  idea          String   @default("")
+  genre         String?
+  subgenre      String?
+  durationMin   Int?
+  country       String?
+  era           String?
+  audience      String?
+  tone          String?
+  theme         String?
+  message       String?
+  inspirations  String?
+  logline       String?
+  tagline       String?
+  synopsisShort String?
+  synopsisLong  String?
+  pitch         String?
+  themes        String[]
+  conflicts     String?
+  stakes        String?
+  universe      String?
+  updatedAt     DateTime @updatedAt
+  project       Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+// ───────────────────────────── La bible ─────────────────────────────
+
+// Un personnage. Les colonnes sont ce que le compilateur injecte dans les
+// prompts ; `profile` porte la fiche narrative (personnalité, arc, peur…).
+model Character {
+  id          String   @id @default(cuid())
+  projectId   String
+  // Identifiant court et stable, repris tel quel dans les prompts : "CH1".
+  code        String
+  name        String
+  role        String?
+  age         String?
+  gender      String?
+  origin      String?
+  heightM     Float?
+  // Forme courte, une phrase : ce qu'un moteur vidéo peut encaisser.
+  short       String   @default("")
+  // Description gelée, complète : visage, corps, cheveux. Ne change jamais.
+  block       String   @default("")
+  costume     String   @default("")
+  // Le marqueur qui l'identifie de loin, quand le visage ne se lit plus.
+  silhouette  String   @default("")
+  never       String[]
+  frozen      Boolean  @default(false)
+  profile     Json     @default("{}")
+  refAssetId  String?
+  order       Int      @default(0)
+  version     Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  ref         Asset?   @relation("CharacterRef", fields: [refAssetId], references: [id], onDelete: SetNull)
+  scenes      SceneCharacter[]
+  shots       ShotCharacter[]
+  assetLinks  AssetLink[]
+
+  @@unique([projectId, code])
+}
+
+model Location {
+  id           String   @id @default(cuid())
+  projectId    String
+  code         String
+  name         String
+  interior     Boolean  @default(true)
+  short        String   @default("")
+  block        String   @default("")
+  architecture String?
+  era          String?
+  palette      String?
+  lighting     String?
+  weather      String?
+  mood         String?
+  textures     String?
+  objects      String?
+  sound        String?
+  never        String[]
+  frozen       Boolean  @default(false)
+  refAssetId   String?
+  order        Int      @default(0)
+  version      Int      @default(1)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  ref          Asset?   @relation("LocationRef", fields: [refAssetId], references: [id], onDelete: SetNull)
+  scenes       Scene[]
+  shots        Shot[]
+  assetLinks   AssetLink[]
+
+  @@unique([projectId, code])
+}
+
+enum PropKind {
+  PROP
+  COSTUME
+  VEHICLE
+  ANIMAL
+  SET_DRESSING
+  VFX
+}
+
+model Prop {
+  id         String   @id @default(cuid())
+  projectId  String
+  code       String
+  kind       PropKind @default(PROP)
+  name       String
+  short      String   @default("")
+  block      String   @default("")
+  never      String[]
+  refAssetId String?
+  order      Int      @default(0)
+  version    Int      @default(1)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  ref        Asset?   @relation("PropRef", fields: [refAssetId], references: [id], onDelete: SetNull)
+  shots      ShotProp[]
+  assetLinks AssetLink[]
+
+  @@unique([projectId, code])
+}
+
+// Le style de rendu (le LOOK de régie v0.1). Plusieurs par projet, un actif.
+model Style {
+  id         String   @id @default(cuid())
+  projectId  String
+  code       String
+  name       String
+  short      String   @default("")
+  block      String   @default("")
+  never      String[]
+  active     Boolean  @default(false)
+  refAssetId String?
+  version    Int      @default(1)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  ref        Asset?   @relation("StyleRef", fields: [refAssetId], references: [id], onDelete: SetNull)
+
+  @@unique([projectId, code])
+}
+
+// Un état de lumière : DAY, NIGHT, GOLDEN… Un plan en déclare un.
+model LightState {
+  id        String   @id @default(cuid())
+  projectId String
+  code      String
+  name      String
+  short     String   @default("")
+  block     String   @default("")
+  never     String[]
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  shots     Shot[]
+  scenes    Scene[]
+
+  @@unique([projectId, code])
+}
+
+// La World Bible : une section par thème (géographie, histoire, règles…).
+model World {
+  id        String   @id @default(cuid())
+  projectId String   @unique
+  // { geography: "...", history: "...", rules: "...", ... } — voir WORLD_SECTIONS.
+  sections  Json     @default("{}")
+  version   Int      @default(1)
+  updatedAt DateTime @updatedAt
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+// ───────────────────────────── La narration ─────────────────────────────
+
+model Story {
+  id        String      @id @default(cuid())
+  projectId String      @unique
+  // THREE_ACT, FIVE_ACT, HEROS_JOURNEY, SAVE_THE_CAT, STORY_CIRCLE, KISHOTENKETSU, CUSTOM
+  structure String      @default("THREE_ACT")
+  updatedAt DateTime    @updatedAt
+  project   Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  beats     StoryBeat[]
+}
+
+// Un temps fort de la structure : incident déclencheur, midpoint, climax…
+model StoryBeat {
+  id          String  @id @default(cuid())
+  storyId     String
+  key         String
+  title       String
+  description String  @default("")
+  order       Int
+  sceneId     String?
+  story       Story   @relation(fields: [storyId], references: [id], onDelete: Cascade)
+  scene       Scene?  @relation(fields: [sceneId], references: [id], onDelete: SetNull)
+
+  @@index([storyId, order])
+}
+
+model Act {
+  id        String     @id @default(cuid())
+  projectId String
+  number    Int
+  title     String
+  summary   String     @default("")
+  order     Int
+  project   Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  sequences Sequence[]
+  scenes    Scene[]
+}
+
+model Sequence {
+  id        String  @id @default(cuid())
+  projectId String
+  actId     String?
+  title     String
+  summary   String  @default("")
+  order     Int
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  act       Act?    @relation(fields: [actId], references: [id], onDelete: SetNull)
+  scenes    Scene[]
+}
+
+enum SceneStatus {
+  IDEA
+  DEVELOPMENT
+  PRE_PRODUCTION
+  PRODUCTION
+  POST_PRODUCTION
+  COMPLETED
+}
+
+model Scene {
+  id           String      @id @default(cuid())
+  projectId    String
+  actId        String?
+  sequenceId   String?
+  number       Int
+  title        String      @default("")
+  // INT, EXT, INT_EXT
+  setting      String      @default("INT")
+  timeOfDay    String      @default("DAY")
+  description  String      @default("")
+  locationId   String?
+  lightId      String?
+  objective    String?
+  conflict     String?
+  emotion      String?
+  outcome      String?
+  estSeconds   Int?
+  importance   Int         @default(2)
+  status       SceneStatus @default(IDEA)
+  order        Int
+  // Dépouillement : objets, costumes, VFX, SFX, musique… (SceneBreakdown).
+  breakdown    Json        @default("{}")
+  // Intentions de mise en scène (SceneDirection).
+  direction    Json        @default("{}")
+  version      Int         @default(1)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  project      Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  act          Act?        @relation(fields: [actId], references: [id], onDelete: SetNull)
+  sequence     Sequence?   @relation(fields: [sequenceId], references: [id], onDelete: SetNull)
+  location     Location?   @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  light        LightState? @relation(fields: [lightId], references: [id], onDelete: SetNull)
+  characters   SceneCharacter[]
+  shots        Shot[]
+  beats        StoryBeat[]
+  storyboards  Storyboard[]
+  assetLinks   AssetLink[]
+
+  @@index([projectId, order])
+}
+
+model SceneCharacter {
+  sceneId     String
+  characterId String
+  scene       Scene     @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+  character   Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@id([sceneId, characterId])
+}
+
+// Le scénario, au format Fountain (texte) : lisible, diffable, exportable.
+// `doc` garde l'état de l'éditeur riche pour ne rien perdre entre deux sessions.
+model Script {
+  id        String   @id @default(cuid())
+  projectId String   @unique
+  fountain  String   @default("")
+  doc       Json?
+  version   Int      @default(1)
+  updatedAt DateTime @updatedAt
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+// ───────────────────────────── Le découpage ─────────────────────────────
+
+model Shot {
+  id          String      @id @default(cuid())
+  projectId   String
+  sceneId     String
+  // "12A", "12B"… recalculé à partir du numéro de scène et de l'ordre.
+  code        String
+  order       Int
+  description String      @default("")
+  action      String      @default("")
+  dialogue    String?
+  audio       String?
+  // Vocabulaire caméra : voir CAMERA_LIBRARY dans @regie/core.
+  size        String?
+  angle       String?
+  lens        String?
+  move        String?
+  composition String?
+  transition  String?
+  durationSec Float       @default(3)
+  aspectRatio String?
+  locationId  String?
+  lightId     String?
+  // Plan de groupe : autorisé à dépasser max_characters_per_shot.
+  isGroup     Boolean     @default(false)
+  note        String?
+  // Prompts réécrits à la main, par cible : { still: "...", veo: "..." }.
+  overrides   Json        @default("{}")
+  // L'image retenue pour la case de storyboard (sinon : la plus récente liée au plan).
+  frameAssetId String?
+  status      SceneStatus @default(IDEA)
+  version     Int         @default(1)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  project     Project     @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  scene       Scene       @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+  location    Location?   @relation(fields: [locationId], references: [id], onDelete: SetNull)
+  light       LightState? @relation(fields: [lightId], references: [id], onDelete: SetNull)
+  frameAsset  Asset?      @relation("ShotFrame", fields: [frameAssetId], references: [id], onDelete: SetNull)
+  characters  ShotCharacter[]
+  props       ShotProp[]
+  frames      StoryboardFrame[]
+  generations Generation[]
+  prompts     Prompt[]
+  assetLinks  AssetLink[]
+
+  @@unique([projectId, code])
+  @@index([sceneId, order])
+}
+
+model ShotCharacter {
+  shotId      String
+  characterId String
+  shot        Shot      @relation(fields: [shotId], references: [id], onDelete: Cascade)
+  character   Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@id([shotId, characterId])
+}
+
+model ShotProp {
+  shotId String
+  propId String
+  shot   Shot   @relation(fields: [shotId], references: [id], onDelete: Cascade)
+  prop   Prop   @relation(fields: [propId], references: [id], onDelete: Cascade)
+
+  @@id([shotId, propId])
+}
+
+// Une planche : un regroupement de plans rendus en une seule image
+// multi-cases (la leçon de régie v0.1 : une passe = des personnages identiques).
+model Storyboard {
+  id          String   @id @default(cuid())
+  projectId   String
+  sceneId     String?
+  title       String
+  aspectRatio String   @default("16:9")
+  sheetAssetId String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  scene       Scene?   @relation(fields: [sceneId], references: [id], onDelete: SetNull)
+  sheet       Asset?   @relation("StoryboardSheet", fields: [sheetAssetId], references: [id], onDelete: SetNull)
+  frames      StoryboardFrame[]
+}
+
+model StoryboardFrame {
+  id           String     @id @default(cuid())
+  storyboardId String
+  shotId       String
+  order        Int
+  assetId      String?
+  caption      String?
+  storyboard   Storyboard @relation(fields: [storyboardId], references: [id], onDelete: Cascade)
+  shot         Shot       @relation(fields: [shotId], references: [id], onDelete: Cascade)
+  asset        Asset?     @relation(fields: [assetId], references: [id], onDelete: SetNull)
+
+  @@unique([storyboardId, shotId])
+}
+
+// ───────────────────────────── Les assets ─────────────────────────────
+
+enum AssetType {
+  IMAGE
+  VIDEO
+  AUDIO
+  DOCUMENT
+}
+
+enum AssetSource {
+  UPLOAD
+  GENERATED
+  IMPORTED
+}
+
+model Asset {
+  id           String      @id @default(cuid())
+  projectId    String
+  ownerId      String?
+  type         AssetType
+  source       AssetSource @default(UPLOAD)
+  name         String
+  storageKey   String      @unique
+  mimeType     String
+  sizeBytes    Int
+  width        Int?
+  height       Int?
+  durationSec  Float?
+  // Bibliothèque de références : character, location, costume, style, composition.
+  isReference  Boolean     @default(false)
+  referenceKind String?
+  tags         String[]
+  generationId String?
+  // Chaîne de versions : une régénération pointe vers l'asset qu'elle remplace.
+  parentId     String?
+  version      Int         @default(1)
+  createdAt    DateTime    @default(now())
+
+  project      Project     @relation("ProjectAssets", fields: [projectId], references: [id], onDelete: Cascade)
+  owner        User?       @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  generation   Generation? @relation("GenerationOutputs", fields: [generationId], references: [id], onDelete: SetNull)
+  parent       Asset?      @relation("AssetVersions", fields: [parentId], references: [id], onDelete: SetNull)
+  children     Asset[]     @relation("AssetVersions")
+  links        AssetLink[]
+  coverOf      Project?    @relation("ProjectCover")
+  characterRefs Character[] @relation("CharacterRef")
+  locationRefs Location[]  @relation("LocationRef")
+  propRefs     Prop[]      @relation("PropRef")
+  styleRefs    Style[]     @relation("StyleRef")
+  frames       StoryboardFrame[]
+  sheets       Storyboard[] @relation("StoryboardSheet")
+  clips        TimelineClip[]
+  shotFrames   Shot[]      @relation("ShotFrame")
+  renders      Render[]    @relation("RenderOutput")
+
+  @@index([projectId, type, createdAt])
+}
+
+// Le "Character ID" du moteur de cohérence : chaque asset est rattaché aux
+// entités qu'il montre, pour filtrer et pour choisir les références.
+model AssetLink {
+  id          String     @id @default(cuid())
+  assetId     String
+  characterId String?
+  locationId  String?
+  propId      String?
+  sceneId     String?
+  shotId      String?
+  asset       Asset      @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  character   Character? @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  location    Location?  @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  prop        Prop?      @relation(fields: [propId], references: [id], onDelete: Cascade)
+  scene       Scene?     @relation(fields: [sceneId], references: [id], onDelete: Cascade)
+  shot        Shot?      @relation(fields: [shotId], references: [id], onDelete: Cascade)
+
+  @@index([characterId])
+  @@index([locationId])
+  @@index([shotId])
+}
+
+// ───────────────────────────── Les providers IA ─────────────────────────────
+
+enum Capability {
+  TEXT
+  IMAGE
+  VIDEO
+  AUDIO
+  EMBEDDING
+}
+
+// Un fournisseur branché : OpenAI, Fal, un ComfyUI local… `adapter` désigne
+// l'implémentation dans @regie/providers ; la clé est chiffrée (AES-256-GCM).
+model Provider {
+  id           String       @id @default(cuid())
+  // null = provider de l'instance, visible par tous (géré par l'admin).
+  workspaceId  String?
+  createdById  String?
+  name         String
+  adapter      String
+  baseUrl      String?
+  apiKeyEnc    String?
+  apiKeyHint   String?
+  // Options propres à l'adapter (workflow ComfyUI, région, organisation…).
+  config       Json         @default("{}")
+  isLocal      Boolean      @default(false)
+  enabled      Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  workspace    Workspace?   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdBy    User?        @relation(fields: [createdById], references: [id], onDelete: SetNull)
+  models       Model[]
+  generations  Generation[]
+}
+
+model Model {
+  id           String       @id @default(cuid())
+  providerId   String
+  // Identifiant chez le provider : "gpt-image-1", "fal-ai/flux/dev"…
+  modelId      String
+  label        String
+  capability   Capability
+  // Ce que le modèle sait faire : text-to-image, image-to-video, first-last-frame…
+  modes        String[]
+  // Coût estimé : { unit: "image" | "second" | "1k_tokens" | "request", usd: 0.04 }
+  pricing      Json         @default("{}")
+  // Notes de 1 à 5 pour le routage AUTO.
+  quality      Int          @default(3)
+  speed        Int          @default(3)
+  maxDuration  Float?
+  aspectRatios String[]
+  enabled      Boolean      @default(true)
+  createdAt    DateTime     @default(now())
+
+  provider     Provider     @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  routes       ModelRoute[]
+  generations  Generation[]
+
+  @@unique([providerId, modelId])
+}
+
+// Le routage : pour une tâche (IMAGE_GENERATION, VIDEO_GENERATION, TEXT…),
+// quel modèle utiliser par défaut, et dans quel ordre de repli.
+model ModelRoute {
+  id          String   @id @default(cuid())
+  workspaceId String?
+  task        String
+  modelId     String
+  priority    Int      @default(0)
+  model       Model    @relation(fields: [modelId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, task, modelId])
+}
+
+// ───────────────────────────── La fabrication ─────────────────────────────
+
+enum GenerationStatus {
+  QUEUED
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELED
+}
+
+// Une demande de génération : ce qui a été demandé, avec quel prompt
+// compilé, à quel modèle, pour quel coût. Le résultat devient un Asset.
+model Generation {
+  id           String           @id @default(cuid())
+  projectId    String
+  userId       String
+  capability   Capability
+  // text-to-image, image-to-video, first-last-frame, text…
+  mode         String
+  status       GenerationStatus @default(QUEUED)
+  providerId   String?
+  modelId      String?
+  shotId       String?
+  // Cible du compilateur : still, veo, kling, wan, sheet, charsheet…
+  target       String?
+  prompt       String
+  negative     String?
+  params       Json             @default("{}")
+  // Assets passés en référence (ids).
+  inputAssetIds String[]
+  // Contexte résolu au moment de la génération, pour la traçabilité.
+  context      Json?
+  progress     Int              @default(0)
+  error        String?
+  errorCode    String?
+  costUsd      Float?
+  durationMs   Int?
+  externalId   String?
+  // Réponse texte (génération TEXT) — le reste sort en Asset.
+  outputText   String?
+  createdAt    DateTime         @default(now())
+  startedAt    DateTime?
+  finishedAt   DateTime?
+
+  project      Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user         User             @relation(fields: [userId], references: [id])
+  provider     Provider?        @relation(fields: [providerId], references: [id], onDelete: SetNull)
+  model        Model?           @relation(fields: [modelId], references: [id], onDelete: SetNull)
+  shot         Shot?            @relation(fields: [shotId], references: [id], onDelete: SetNull)
+  outputs      Asset[]          @relation("GenerationOutputs")
+  jobs         GenerationJob[]
+  usage        Usage[]
+
+  @@index([projectId, createdAt])
+  @@index([status])
+}
+
+// Une tentative d'exécution dans la file BullMQ (plusieurs si retry).
+model GenerationJob {
+  id           String           @id @default(cuid())
+  generationId String
+  queueJobId   String
+  attempt      Int              @default(1)
+  status       GenerationStatus @default(QUEUED)
+  error        String?
+  createdAt    DateTime         @default(now())
+  finishedAt   DateTime?
+  generation   Generation       @relation(fields: [generationId], references: [id], onDelete: Cascade)
+
+  @@index([generationId])
+}
+
+// Registre des coûts : une ligne par appel facturable.
+model Usage {
+  id           String      @id @default(cuid())
+  projectId    String?
+  generationId String?
+  userId       String?
+  providerName String
+  modelId      String
+  capability   Capability
+  inputTokens  Int?
+  outputTokens Int?
+  units        Float?
+  unit         String?
+  costUsd      Float       @default(0)
+  createdAt    DateTime    @default(now())
+  project      Project?    @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  generation   Generation? @relation(fields: [generationId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([projectId, createdAt])
+}
+
+// Un prompt compilé figé (par plan et par cible), éditable, versionné.
+model Prompt {
+  id        String   @id @default(cuid())
+  projectId String
+  shotId    String?
+  target    String
+  text      String
+  negative  String?
+  edited    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  shot      Shot?    @relation(fields: [shotId], references: [id], onDelete: Cascade)
+
+  @@index([shotId, target])
+}
+
+model PromptTemplate {
+  id        String   @id @default(cuid())
+  // null = template de l'instance.
+  projectId String?
+  category  String
+  name      String
+  body      String
+  variables String[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+// ───────────────────────────── Montage ─────────────────────────────
+
+// Une séquence de montage. Un projet peut en avoir plusieurs (versions,
+// bandes-annonces, formats réseaux sociaux).
+model Timeline {
+  id          String          @id @default(cuid())
+  projectId   String
+  name        String
+  fps         Int             @default(24)
+  // Format de sortie ; vide = celui du projet.
+  aspectRatio String?
+  resolution  String?
+  order       Int             @default(0)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  project     Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  tracks      TimelineTrack[]
+  renders     Render[]
+}
+
+model TimelineTrack {
+  id         String         @id @default(cuid())
+  timelineId String
+  // VIDEO, AUDIO, DIALOGUE, MUSIC, SFX, SUBTITLE
+  kind       String
+  name       String
+  order      Int
+  muted      Boolean        @default(false)
+  locked     Boolean        @default(false)
+  volume     Float          @default(1)
+  timeline   Timeline       @relation(fields: [timelineId], references: [id], onDelete: Cascade)
+  clips      TimelineClip[]
+}
+
+model TimelineClip {
+  id         String        @id @default(cuid())
+  trackId    String
+  assetId    String?
+  // Plan d'origine quand le clip vient du découpage.
+  shotId     String?
+  name       String?
+  // Position sur la timeline, et portion utilisée du média source.
+  startSec   Float
+  inSec      Float         @default(0)
+  outSec     Float
+  volume     Float         @default(1)
+  opacity    Float         @default(1)
+  fadeInSec  Float         @default(0)
+  fadeOutSec Float         @default(0)
+  // Texte des sous-titres et des cartons.
+  text       String?
+  track      TimelineTrack @relation(fields: [trackId], references: [id], onDelete: Cascade)
+  asset      Asset?        @relation(fields: [assetId], references: [id], onDelete: SetNull)
+}
+
+// Un rendu de séquence en fichier (FFmpeg, file « renders »).
+model Render {
+  id          String           @id @default(cuid())
+  projectId   String
+  timelineId  String
+  userId      String
+  format      String           @default("mp4")
+  status      GenerationStatus @default(QUEUED)
+  progress    Int              @default(0)
+  // Instantané de la séquence au moment du rendu.
+  spec        Json
+  assetId     String?
+  error       String?
+  durationSec Float?
+  createdAt   DateTime         @default(now())
+  finishedAt  DateTime?
+  timeline    Timeline         @relation(fields: [timelineId], references: [id], onDelete: Cascade)
+  asset       Asset?           @relation("RenderOutput", fields: [assetId], references: [id], onDelete: SetNull)
+
+  @@index([timelineId, createdAt])
+}
+
+// ───────────────────────────── Assistant ─────────────────────────────
+
+model AssistantThread {
+  id        String             @id @default(cuid())
+  projectId String
+  userId    String
+  title     String             @default("")
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  project   Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages  AssistantMessage[]
+}
+
+model AssistantMessage {
+  id        String          @id @default(cuid())
+  threadId  String
+  // user | assistant | tool
+  role      String
+  content   String
+  toolCalls Json?
+  createdAt DateTime        @default(now())
+  thread    AssistantThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@index([threadId, createdAt])
+}
