@@ -19,7 +19,9 @@ import {
 import { GitHubMark } from '@/components/github-mark';
 import { CompilerDemo } from '@/components/landing/compiler-demo';
 import { CopyButton } from '@/components/landing/copy-button';
-import { Screen } from '@/components/landing/screen';
+import { HeroVisual } from '@/components/landing/hero-visual';
+import { Reveal, RevealGroup, RevealItem } from '@/components/landing/reveal';
+import { Screen, type ScreenName } from '@/components/landing/screen';
 import { repoUrl } from '@/lib/shared';
 
 /* ─── Éléments communs ─────────────────────────────────────────────── */
@@ -34,20 +36,41 @@ function Section({ id, children, className = '' }: { id?: string; children: Reac
 
 function Eyebrow({ n, children }: { n: string; children: ReactNode }) {
   return (
-    <p className="mb-5 flex items-center gap-3 font-mono text-xs text-muted-foreground">
-      <span className="text-signal">{n}</span>
-      <span className="h-px w-6 bg-border-strong" />
-      {children}
-    </p>
+    <Reveal>
+      <p className="mb-5 flex items-center gap-3 font-mono text-xs text-muted-foreground">
+        <span className="text-signal">{n}</span>
+        <span className="h-px w-6 bg-border-strong" />
+        {children}
+      </p>
+    </Reveal>
   );
 }
 
 function Title({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return <h2 className={`max-w-3xl text-[28px] font-semibold leading-[1.15] tracking-[-0.02em] text-balance sm:text-4xl ${className}`}>{children}</h2>;
+  return (
+    <Reveal delay={0.04}>
+      <h2 className={`max-w-3xl text-[28px] font-semibold leading-[1.12] tracking-[-0.025em] text-balance sm:text-[2.6rem] ${className}`}>{children}</h2>
+    </Reveal>
+  );
 }
 
 function Lead({ children, className = '' }: { children: ReactNode; className?: string }) {
-  return <p className={`mt-5 max-w-2xl text-[17px] leading-relaxed text-muted-foreground text-pretty ${className}`}>{children}</p>;
+  return (
+    <Reveal delay={0.08}>
+      <p className={`mt-5 max-w-2xl text-[17px] leading-relaxed text-muted-foreground text-pretty ${className}`}>{children}</p>
+    </Reveal>
+  );
+}
+
+// Une capture révélée au défilement, avec un léger soulèvement au survol.
+function Shot({ name, caption, className = '' }: { name: ScreenName; caption: string; className?: string }) {
+  return (
+    <Reveal delay={0.06} className={className}>
+      <div className="transition-transform duration-500 ease-out will-change-transform hover:-translate-y-1">
+        <Screen name={name} caption={caption} />
+      </div>
+    </Reveal>
+  );
 }
 
 /* ─── Données ──────────────────────────────────────────────────────── */
@@ -111,40 +134,61 @@ export default function HomePage() {
     <>
       {/* Héros */}
       <section className="relative overflow-hidden">
-        <div className="mx-auto max-w-6xl px-4 pt-16 sm:px-6 md:pt-24">
-          <p className="mb-7 inline-flex items-center gap-2 rounded-[3px] border border-border px-2.5 py-1 font-mono text-xs text-muted-foreground">
-            <span className="size-1.5 rounded-full bg-signal" />
-            Open source · MIT · auto-hébergé
-          </p>
-          <h1 className="max-w-5xl text-[40px] font-semibold leading-[1.04] tracking-[-0.035em] text-balance sm:text-6xl md:text-[76px]">
-            Une bible, un découpage,<br className="hidden sm:block" /> <span className="text-signal">N</span> moteurs.
-          </h1>
-          <p className="mt-7 max-w-2xl text-lg leading-relaxed text-muted-foreground text-pretty sm:text-xl">
-            Un studio de production audiovisuelle assisté par IA. De l’idée au film, sans que les personnages changent de visage d’un plan à
-            l’autre.
-          </p>
-          <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-            <a
-              href={repoUrl}
-              className="inline-flex h-11 items-center justify-center gap-2.5 rounded-[3px] bg-foreground px-5 text-[15px] font-medium text-background transition-opacity hover:opacity-90"
-            >
-              <GitHubMark className="size-[18px]" />
-              Voir sur GitHub
-            </a>
-            <Link
-              href="/docs"
-              className="group inline-flex h-11 items-center justify-center gap-2 rounded-[3px] border border-border-strong px-5 text-[15px] font-medium transition-colors hover:bg-secondary"
-            >
-              Lire la documentation
-              <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
-            </Link>
-          </div>
+        {/* Lueur de projecteur, très douce, teintée signal. */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[520px]"
+          style={{
+            background:
+              'radial-gradient(62% 68% at 50% -8%, color-mix(in oklch, var(--signal) 14%, transparent), transparent 70%), radial-gradient(40% 40% at 50% 0%, color-mix(in oklch, var(--signal) 8%, transparent), transparent 75%)',
+          }}
+        />
+        <div className="mx-auto max-w-4xl px-4 pt-20 text-center sm:px-6 md:pt-28">
+          <RevealGroup>
+            <RevealItem>
+              <p className="mx-auto mb-7 inline-flex items-center gap-2 rounded-full border border-border bg-background/70 px-3 py-1 font-mono text-xs text-muted-foreground backdrop-blur">
+                <span className="size-1.5 rounded-full bg-signal" />
+                Open source · MIT · auto-hébergé
+              </p>
+            </RevealItem>
+            <RevealItem>
+              <h1 className="mx-auto max-w-4xl text-[clamp(2.6rem,7vw,5rem)] font-semibold leading-[1.02] tracking-[-0.04em] text-balance">
+                Une bible, un découpage, <span className="text-signal">N</span> moteurs.
+              </h1>
+            </RevealItem>
+            <RevealItem>
+              <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground text-pretty sm:text-xl">
+                Le studio open source pour faire un film avec l’IA. De l’idée au montage, sans que vos personnages changent de visage d’un plan
+                à l’autre.
+              </p>
+            </RevealItem>
+            <RevealItem>
+              <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
+                <a
+                  href={repoUrl}
+                  className="inline-flex h-11 w-full items-center justify-center gap-2.5 rounded-[4px] bg-foreground px-5 text-[15px] font-medium text-background transition-opacity hover:opacity-90 sm:w-auto"
+                >
+                  <GitHubMark className="size-[18px]" />
+                  Voir sur GitHub
+                </a>
+                <Link
+                  href="/docs"
+                  className="group inline-flex h-11 w-full items-center justify-center gap-2 rounded-[4px] border border-border-strong px-5 text-[15px] font-medium transition-colors hover:bg-secondary sm:w-auto"
+                >
+                  Lire la documentation
+                  <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+                </Link>
+              </div>
+            </RevealItem>
+          </RevealGroup>
         </div>
-        <div className="mx-auto mt-14 max-w-6xl px-4 sm:px-6 md:mt-20">
-          <Screen name="hero" caption="Le projet : bible, scènes, plans et générations" priority />
+        <div className="mx-auto mt-16 max-w-[1120px] px-4 sm:px-6 md:mt-20">
+          <HeroVisual>
+            <Screen name="hero" caption="Le projet : bible, scènes, plans et générations" priority />
+          </HeroVisual>
         </div>
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">
-          <dl className="grid gap-px overflow-hidden border-x border-b border-border bg-border sm:grid-cols-3">
+        <div className="mx-auto -mt-6 max-w-6xl px-4 sm:px-6">
+          <dl className="grid gap-px overflow-hidden rounded-[6px] border border-border bg-border sm:grid-cols-3">
             {[
               ['Aucune génération simulée', 'Sans fournisseur configuré, l’interface le dit et propose de le configurer. Rien ne fait semblant.'],
               ['Aucun fournisseur câblé', 'Chaque fournisseur est un adapter derrière une interface commune. On en change sans toucher au reste.'],
@@ -255,7 +299,7 @@ export default function HomePage() {
               ))}
             </ul>
           </div>
-          <Screen name="characters" caption="Bible : personnages" />
+          <Shot name="characters" caption="Bible : personnages" />
         </div>
 
         <div className="mt-20">
@@ -273,7 +317,7 @@ export default function HomePage() {
         </div>
 
         <div className="mt-20 grid items-center gap-12 lg:grid-cols-[7fr_5fr] lg:gap-16">
-          <Screen name="prompts" caption="Prompt compilé, visible et réécrivable" />
+          <Shot name="prompts" caption="Prompt compilé, visible et réécrivable" />
           <div>
             <h3 className="text-xl font-semibold tracking-tight">Vous gardez la main.</h3>
             <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
@@ -343,7 +387,7 @@ export default function HomePage() {
               et plans qu’il montre : on sait ce qu’il faut refaire quand une fiche change.
             </p>
           </div>
-          <Screen name="graph" caption="Graphe du projet" />
+          <Shot name="graph" caption="Graphe du projet" />
         </div>
       </Section>
 
@@ -388,7 +432,7 @@ export default function HomePage() {
           </div>
         </div>
         <div className="mt-16">
-          <Screen name="providers" caption="Réglages : providers IA" />
+          <Shot name="providers" caption="Réglages : providers IA" />
         </div>
       </Section>
 
@@ -401,7 +445,7 @@ export default function HomePage() {
           du découpage, un clip par plan.
         </Lead>
         <div className="mt-12">
-          <Screen name="montage" caption="Montage" />
+          <Shot name="montage" caption="Montage" />
         </div>
         <div className="mt-10 grid gap-px overflow-hidden rounded-[6px] border border-border bg-border md:grid-cols-3">
           {[
@@ -513,11 +557,11 @@ export default function HomePage() {
 
 function Figure({ title, text, children }: { title: string; text: string; children: ReactNode }) {
   return (
-    <div>
-      {children}
+    <Reveal delay={0.04}>
+      <div className="transition-transform duration-500 ease-out will-change-transform hover:-translate-y-1">{children}</div>
       <p className="mt-5 font-medium">{title}</p>
       <p className="mt-1 max-w-md text-sm leading-relaxed text-muted-foreground">{text}</p>
-    </div>
+    </Reveal>
   );
 }
 
