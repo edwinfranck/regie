@@ -7,7 +7,7 @@
 Le studio open source pour faire un film avec l'IA — de l'idée au montage —
 sans que vos personnages changent de visage d'un plan à l'autre.
 
-[Site et documentation](https://SITE_URL) · [Démarrer](#démarrer-en-local) · [Contribuer](CONTRIBUTING.md) · [Licence MIT](LICENSE)
+[Site et documentation](https://regie-studio.vercel.app) · [Démarrer](#démarrer-en-local) · [Contribuer](CONTRIBUTING.md) · [Licence MIT](LICENSE)
 
 ![régie — le découpage d'une scène, plan par plan](docs/screens/scene.webp)
 
@@ -127,7 +127,7 @@ packages/
 
 ## Documentation
 
-La documentation complète est sur **[le site](https://SITE_URL/docs)** : guide
+La documentation complète est sur **[le site](https://regie-studio.vercel.app/docs)** : guide
 d'utilisation étape par étape, fournisseurs, architecture, déploiement. Les
 notes techniques sont aussi dans [`docs/`](docs).
 
