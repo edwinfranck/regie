@@ -176,26 +176,26 @@ export default function HomePage() {
               </span>
             </RevealItem>
             <RevealItem>
-              <h1 className="font-display mx-auto mt-6 max-w-5xl text-[clamp(2.3rem,6vw,4.2rem)] leading-[1.02] font-semibold text-balance">
+              <h1 className="font-display mx-auto mt-6 max-w-5xl text-[clamp(1.75rem,6.5vw,4.2rem)] leading-[1.05] font-semibold text-balance">
                 Une bible, un découpage,
                 <br />
                 <span className="text-signal">N moteurs.</span>
               </h1>
             </RevealItem>
             <RevealItem>
-              <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground text-pretty">
+              <p className="mx-auto mt-6 max-w-xl text-[15px] leading-relaxed text-muted-foreground/70 text-pretty sm:text-lg">
                 Le studio open source pour faire un film avec l’IA. De l’idée au montage, sans que vos personnages changent de visage d’un plan
                 à l’autre.
               </p>
             </RevealItem>
             <RevealItem>
-              <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-                <a href={repoUrl} className="inline-flex h-11 w-full items-center justify-center gap-2.5 rounded-[12px] bg-foreground px-5 text-[15px] font-medium text-background transition-[transform,opacity,box-shadow] duration-200 hover:-translate-y-0.5 hover:opacity-95 hover:shadow-[0_12px_30px_-10px_oklch(0_0_0/0.5)] active:translate-y-0 sm:w-auto">
+              <div className="mt-9 flex flex-row flex-wrap items-center justify-center gap-3">
+                <a href={repoUrl} className="inline-flex h-11 items-center justify-center gap-2.5 rounded-[12px] bg-foreground px-4 text-[15px] font-medium text-background transition-[transform,opacity,box-shadow] duration-200 hover:-translate-y-0.5 hover:opacity-95 hover:shadow-[0_12px_30px_-10px_oklch(0_0_0/0.5)] active:translate-y-0 sm:px-5">
                   <GitHubMark className="size-[18px]" />
-                  Voir sur GitHub
+                  GitHub
                 </a>
-                <Link href="/docs" className="group inline-flex h-11 w-full items-center justify-center gap-2 rounded-[12px] border border-border-strong px-5 text-[15px] font-medium transition-[transform,background-color] duration-200 hover:-translate-y-0.5 hover:bg-secondary active:translate-y-0 sm:w-auto">
-                  Lire la documentation
+                <Link href="/docs" className="group inline-flex h-11 items-center justify-center gap-2 rounded-[12px] border border-border-strong px-4 text-[15px] font-medium transition-[transform,background-color] duration-200 hover:-translate-y-0.5 hover:bg-secondary active:translate-y-0 sm:px-5">
+                  Documentation
                   <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
                 </Link>
               </div>
@@ -216,7 +216,7 @@ export default function HomePage() {
         </div>
 
         {/* 4. Trois principes */}
-        <div className="mx-auto mt-16 max-w-[1600px] px-4 sm:px-6 lg:px-10">
+        <div className="mx-auto mt-16 max-w-[1600px] px-4 sm:px-6 lg:px-10 max-md:pb-14">
           <RevealGroup className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             {[
               [Sparkles, 'Aucune génération simulée', 'Sans fournisseur configuré, l’interface le dit et propose de le configurer. Rien ne fait semblant.'],
@@ -239,7 +239,7 @@ export default function HomePage() {
       </section>
 
       {/* 5. Le problème → la solution */}
-      <Section id="probleme">
+      <Section id="probleme" className="max-md:hidden">
         <Pill>Le problème</Pill>
         <div className="mt-5">
           <TwoTone muted="Un modèle n’a aucune mémoire." strong="régie lui en donne une." />
@@ -256,7 +256,7 @@ export default function HomePage() {
       </Section>
 
       {/* 6. Le parcours — bande sombre */}
-      <section id="parcours" className="panel-dark">
+      <section id="parcours" className="panel-dark max-md:hidden">
         <div className="mx-auto max-w-[1600px] px-4 py-20 sm:px-6 md:py-28 lg:px-10">
           <Pill>Le parcours</Pill>
           <TwoTone className="mt-5" muted="De l’idée au film," strong="dans un seul outil." />
@@ -286,7 +286,7 @@ export default function HomePage() {
       </section>
 
       {/* 7. La bible et le compilateur */}
-      <Section id="la-bible">
+      <Section id="la-bible" className="max-md:hidden">
         <Pill>La bible et le compilateur</Pill>
         <TwoTone className="mt-5" muted="Une seule" strong="source de vérité." />
         <Lead>
@@ -334,7 +334,7 @@ export default function HomePage() {
       </Section>
 
       {/* 8. Cohérence */}
-      <Section id="coherence">
+      <Section id="coherence" className="max-md:hidden">
         <Pill>Cohérence</Pill>
         <TwoTone className="mt-5" muted="Les références" strong="voyagent avec chaque plan." />
         <Lead>Générer la feuille d’un personnage en fait sa référence, chargée ensuite dans chaque plan où il apparaît.</Lead>
@@ -382,7 +382,7 @@ export default function HomePage() {
       </Section>
 
       {/* 9. Fournisseurs */}
-      <Section id="fournisseurs">
+      <Section id="fournisseurs" className="max-md:hidden">
         <Pill>Fournisseurs</Pill>
         <TwoTone className="mt-5" muted="Aucun" strong="fournisseur câblé." />
         <Lead>Douze adapters derrière une interface commune, tout service compatible OpenAI, et vos modèles locaux.</Lead>
@@ -424,7 +424,7 @@ export default function HomePage() {
       </Section>
 
       {/* 10. Montage et export */}
-      <Section id="montage-section">
+      <Section id="montage-section" className="max-md:hidden">
         <div className="grid grid-cols-1 items-center gap-12 lg:grid-cols-[5fr_7fr] lg:gap-16">
           <div className="min-w-0">
             <Pill>Montage et export</Pill>
@@ -457,7 +457,7 @@ export default function HomePage() {
       </Section>
 
       {/* 11. Chez vous — bloc sombre */}
-      <section id="open-source" className="panel-dark">
+      <section id="open-source" className="panel-dark max-md:hidden">
         <div className="mx-auto max-w-[1600px] px-4 py-20 sm:px-6 md:py-24 lg:px-10">
           <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_1.3fr] lg:items-center lg:gap-16">
             <div>
@@ -492,7 +492,7 @@ export default function HomePage() {
       </section>
 
       {/* 12. Démarrage rapide */}
-      <Section id="demarrer">
+      <Section id="demarrer" className="max-md:hidden">
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-[5fr_7fr] lg:gap-16">
           <div>
             <Pill>Démarrage rapide</Pill>
@@ -527,7 +527,7 @@ export default function HomePage() {
       </Section>
 
       {/* 13. CTA final */}
-      <section className="border-t border-border bg-muted/40">
+      <section className="border-t border-border bg-muted/40 max-md:hidden">
         <div className="mx-auto max-w-4xl px-4 py-24 text-center sm:px-6">
           <Reveal>
             <h2 className="font-display mx-auto max-w-3xl text-[2rem] leading-[1.08] font-semibold text-balance sm:text-[2.8rem]">
