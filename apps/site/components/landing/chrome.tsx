@@ -6,36 +6,49 @@ import { repoUrl } from '@/lib/shared';
 
 const NAV = [
   { href: '#parcours', label: 'Parcours' },
-  { href: '#bible', label: 'Bible' },
+  { href: '#la-bible', label: 'Bible' },
   { href: '#coherence', label: 'Cohérence' },
   { href: '#fournisseurs', label: 'Fournisseurs' },
   { href: '#open-source', label: 'Open source' },
 ];
 
-export function SiteHeader() {
+async function stars(): Promise<string | null> {
+  try {
+    const res = await fetch('https://api.github.com/repos/edwinfranck/regie', { next: { revalidate: 3600 } });
+    if (!res.ok) return null;
+    const n = (await res.json()).stargazers_count as number;
+    return n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n);
+  } catch {
+    return null;
+  }
+}
+
+export async function SiteHeader() {
+  const count = await stars();
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/75">
-      <div className="mx-auto flex h-14 max-w-6xl items-center gap-6 px-4 sm:px-6">
-        <Link href="/" className="text-[17px]" aria-label="régie, accueil">
+    <header className="pointer-events-none fixed inset-x-0 top-0 z-40 flex justify-center px-4 pt-3 sm:pt-4">
+      <div className="pointer-events-auto flex h-12 w-full max-w-4xl items-center gap-2 rounded-full border border-border/80 bg-background/80 px-2 pl-4 shadow-[0_1px_2px_oklch(0_0_0/0.05),0_12px_28px_-16px_oklch(0_0_0/0.3)] backdrop-blur-xl sm:gap-4">
+        <Link href="/" className="text-[16px]" aria-label="régie, accueil">
           <Wordmark />
         </Link>
-        <nav className="hidden items-center gap-5 text-sm text-muted-foreground md:flex" aria-label="Sections">
+        <nav className="ml-1 hidden items-center gap-4 text-[13.5px] text-muted-foreground lg:flex" aria-label="Sections">
           {NAV.map((n) => (
             <a key={n.href} href={n.href} className="transition-colors hover:text-foreground">
               {n.label}
             </a>
           ))}
         </nav>
-        <div className="ml-auto flex items-center gap-2">
-          <Link href="/docs" className="inline-flex h-8 items-center rounded-[3px] px-3 text-sm font-medium transition-colors hover:bg-secondary">
+        <div className="ml-auto flex items-center gap-1.5">
+          <Link href="/docs" className="hidden h-8 items-center rounded-full px-3 text-[13.5px] font-medium transition-colors hover:bg-secondary sm:inline-flex">
             Documentation
           </Link>
           <a
             href={repoUrl}
-            className="inline-flex h-8 items-center gap-2 rounded-[3px] border border-border px-3 text-sm font-medium transition-colors hover:border-border-strong hover:bg-secondary"
+            className="inline-flex h-8 items-center gap-2 rounded-full bg-foreground px-3.5 text-[13.5px] font-medium text-background transition-opacity hover:opacity-90"
           >
             <GitHubMark className="size-4" />
-            <span className="hidden sm:inline">GitHub</span>
+            GitHub
+            {count && <span className="font-mono text-[11px] text-background/60">★ {count}</span>}
           </a>
         </div>
       </div>
@@ -49,7 +62,7 @@ export function SiteFooter() {
       title: 'Produit',
       links: [
         { href: '#parcours', label: 'Le parcours' },
-        { href: '#bible', label: 'Bible et compilateur' },
+        { href: '#la-bible', label: 'Bible et compilateur' },
         { href: '#fournisseurs', label: 'Fournisseurs' },
         { href: '/docs/feuille-de-route', label: 'Feuille de route' },
       ],
@@ -76,7 +89,7 @@ export function SiteFooter() {
 
   return (
     <footer className="border-t border-border">
-      <div className="mx-auto grid max-w-6xl grid-cols-2 gap-10 px-4 py-14 sm:px-6 md:grid-cols-[1.4fr_repeat(3,1fr)]">
+      <div className="mx-auto grid max-w-[1600px] grid-cols-2 gap-10 px-4 py-14 sm:px-6 lg:px-10 md:grid-cols-[1.4fr_repeat(3,1fr)]">
         <div className="col-span-2 max-w-xs md:col-span-1">
           <Wordmark className="text-[17px]" />
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
@@ -106,9 +119,9 @@ export function SiteFooter() {
         ))}
       </div>
       <div className="border-t border-border">
-        <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-5 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <div className="mx-auto flex max-w-[1600px] flex-col gap-2 px-4 py-5 lg:px-10 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6">
           <span>régie — logiciel libre sous licence MIT.</span>
-          <span className="font-mono">edwinfranck/regie</span>
+          <a href={repoUrl} className="font-mono transition-colors hover:text-foreground">edwinfranck/regie</a>
         </div>
       </div>
     </footer>

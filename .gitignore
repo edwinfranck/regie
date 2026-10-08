@@ -15,3 +15,7 @@ apps/web/playwright-report/
 maquette/
 CLAUDE.md
 .claude/
+
+# Skills installés localement (HyperFrames, etc.)
+.agents/
+skills-lock.json

@@ -1,4 +1,11 @@
 {
   "title": "Providers",
-  "pages": ["index", "compatibles-openai", "local", "comfyui", "ajouter-un-adapter"]
+  "icon": "Plug",
+  "pages": [
+    "index",
+    "compatibles-openai",
+    "local",
+    "comfyui",
+    "ajouter-un-adapter"
+  ]
 }
