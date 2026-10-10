@@ -23,7 +23,7 @@ import { CopyButton } from '@/components/landing/copy-button';
 import { AppWindow, Floating, Parallax, PromptCompare, ProviderLogo, StepBar } from '@/components/landing/interactive';
 import { Reveal, RevealGroup, RevealItem } from '@/components/landing/reveal';
 import { Screen, type ScreenName } from '@/components/landing/screen';
-import { repoUrl } from '@/lib/shared';
+import { appUrl, repoUrl } from '@/lib/shared';
 
 /* ─── Primitives ───────────────────────────────────────────────────── */
 
@@ -190,14 +190,14 @@ export default function HomePage() {
             </RevealItem>
             <RevealItem>
               <div className="mt-9 flex flex-row flex-wrap items-center justify-center gap-3">
-                <a href={repoUrl} className="inline-flex h-11 items-center justify-center gap-2.5 rounded-[12px] bg-foreground px-4 text-[15px] font-medium text-background transition-[transform,opacity,box-shadow] duration-200 hover:-translate-y-0.5 hover:opacity-95 hover:shadow-[0_12px_30px_-10px_oklch(0_0_0/0.5)] active:translate-y-0 sm:px-5">
+                <a href={appUrl} className="group inline-flex h-11 items-center justify-center gap-2 rounded-[12px] bg-foreground px-5 text-[15px] font-medium text-background transition-[transform,opacity,box-shadow] duration-200 hover:-translate-y-0.5 hover:opacity-95 hover:shadow-[0_12px_30px_-10px_oklch(0_0_0/0.5)] active:translate-y-0">
+                  Essayer la démo
+                  <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+                </a>
+                <a href={repoUrl} className="inline-flex h-11 items-center justify-center gap-2.5 rounded-[12px] border border-border-strong px-4 text-[15px] font-medium transition-[transform,background-color] duration-200 hover:-translate-y-0.5 hover:bg-secondary active:translate-y-0 sm:px-5">
                   <GitHubMark className="size-[18px]" />
                   GitHub
                 </a>
-                <Link href="/docs" className="group inline-flex h-11 items-center justify-center gap-2 rounded-[12px] border border-border-strong px-4 text-[15px] font-medium transition-[transform,background-color] duration-200 hover:-translate-y-0.5 hover:bg-secondary active:translate-y-0 sm:px-5">
-                  Documentation
-                  <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
-                </Link>
               </div>
             </RevealItem>
           </RevealGroup>
@@ -536,13 +536,14 @@ export default function HomePage() {
           </Reveal>
           <Reveal delay={0.08}>
             <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <a href={repoUrl} className="inline-flex h-11 w-full items-center justify-center gap-2.5 rounded-[12px] bg-foreground px-6 text-[15px] font-medium text-background transition-opacity hover:opacity-90 sm:w-auto">
+              <a href={appUrl} className="group inline-flex h-11 w-full items-center justify-center gap-2 rounded-[12px] bg-foreground px-6 text-[15px] font-medium text-background transition-opacity hover:opacity-90 sm:w-auto">
+                Essayer la démo
+                <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" />
+              </a>
+              <a href={repoUrl} className="inline-flex h-11 w-full items-center justify-center gap-2.5 rounded-[12px] border border-border-strong px-6 text-[15px] font-medium transition-colors hover:bg-background sm:w-auto">
                 <GitHubMark className="size-[18px]" />
                 Voir sur GitHub
               </a>
-              <Link href="/docs" className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-[12px] border border-border-strong px-6 text-[15px] font-medium transition-colors hover:bg-background sm:w-auto">
-                Lire la documentation
-              </Link>
             </div>
           </Reveal>
         </div>

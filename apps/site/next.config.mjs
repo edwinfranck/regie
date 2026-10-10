@@ -9,6 +9,13 @@ const config = {
   // côté serveur, le site reste statique.
   images: { unoptimized: true },
   agentRules: false,
+  // /app → l'application en ligne (démo publique).
+  async redirects() {
+    return [
+      { source: '/app', destination: 'https://regie-app-gamma.vercel.app', permanent: false },
+      { source: '/app/:path*', destination: 'https://regie-app-gamma.vercel.app/:path*', permanent: false },
+    ];
+  },
 };
 
 export default withMDX(config);

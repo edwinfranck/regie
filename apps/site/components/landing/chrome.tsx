@@ -1,8 +1,8 @@
 import Link from 'next/link';
-import { BookOpen } from 'lucide-react';
+import { ArrowRight, BookOpen } from 'lucide-react';
 import { GitHubMark } from '@/components/github-mark';
 import { Wordmark } from '@/components/wordmark';
-import { repoUrl } from '@/lib/shared';
+import { appUrl, repoUrl } from '@/lib/shared';
 
 const NAV = [
   { href: '#parcours', label: 'Parcours' },
@@ -26,16 +26,20 @@ export function SiteHeader() {
             </a>
           ))}
         </nav>
-        <div className="ml-auto flex items-center gap-1">
-          <Link href="/docs" className="hidden h-8 items-center rounded-full px-3 text-[13.5px] font-medium transition-colors hover:bg-secondary sm:inline-flex">
-            Documentation
-          </Link>
+        <div className="ml-auto flex items-center gap-1.5">
           <a
             href={repoUrl}
             aria-label="Dépôt GitHub"
-            className="inline-flex size-8 items-center justify-center rounded-full bg-foreground text-background transition-opacity hover:opacity-90"
+            className="hidden size-8 items-center justify-center rounded-full border border-border transition-colors hover:bg-secondary sm:inline-flex"
           >
             <GitHubMark className="size-4" />
+          </a>
+          <a
+            href={appUrl}
+            className="group inline-flex h-8 items-center gap-1.5 rounded-full bg-foreground px-3.5 text-[13.5px] font-medium text-background transition-opacity hover:opacity-90"
+          >
+            Essayer
+            <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
           </a>
         </div>
       </div>
