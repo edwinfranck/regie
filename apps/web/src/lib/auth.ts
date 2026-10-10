@@ -1,10 +1,14 @@
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import { prisma } from '@regie/db';
+import { personalWorkspace } from '@regie/studio';
 import bcrypt from 'bcryptjs';
 import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 import { z } from 'zod';
 import { authConfig } from './auth.config';
+
+/** Le mode démo (A+B) : accès public anonyme, sans compte. */
+export const DEMO_MODE = process.env.DEMO_MODE === '1';
 
 // Authentification. Tout ce qui touche à Auth.js est confiné ici et dans
 // auth.config.ts : changer pour Better Auth ou Clerk ne demande que de
@@ -29,6 +33,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         return { id: user.id, email: user.email, name: user.name, image: user.image };
       },
     }),
+    // Mode démo : connexion anonyme. Crée un visiteur jetable + son workspace.
+    // Aucune saisie : on l'appelle depuis /api/demo/start.
+    Credentials({
+      id: 'guest',
+      name: 'Invité',
+      credentials: {},
+      async authorize() {
+        if (!DEMO_MODE) return null;
+        const suffix = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+        const user = await prisma.user.create({
+          data: { email: `guest-${suffix}@demo.local`, name: 'Invité', isGuest: true, lastSeenAt: new Date() },
+        });
+        await personalWorkspace(user.id);
+        return { id: user.id, email: user.email, name: user.name, image: null };
+      },
+    }),
   ],
   events: {
     // Compte créé par OAuth : même règle d'administration que l'inscription.
@@ -49,7 +69,7 @@ export async function currentUser() {
   const session = await auth();
   const id = session?.user?.id;
   if (!id) return null;
-  const user = await prisma.user.findUnique({ where: { id }, select: { id: true, email: true, name: true, image: true, isAdmin: true, disabled: true } });
+  const user = await prisma.user.findUnique({ where: { id }, select: { id: true, email: true, name: true, image: true, isAdmin: true, disabled: true, isGuest: true } });
   return user && !user.disabled ? user : null;
 }
 export type CurrentUser = NonNullable<Awaited<ReturnType<typeof currentUser>>>;

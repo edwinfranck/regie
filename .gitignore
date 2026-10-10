@@ -19,3 +19,4 @@ CLAUDE.md
 # Skills installés localement (HyperFrames, etc.)
 .agents/
 skills-lock.json
+docker-compose.override.yml
